@@ -72,7 +72,7 @@ This is of course a very light of a `Test Strategy` but it will be enough for th
 
 # Sprint 1
 
-## 1 Test Plan
+## 1. Test Plan
 
 Here is a simple `Test Plan` for the exercise that should suit all our basic needs:
 
@@ -144,10 +144,260 @@ Here are the deliverables that will be produced:
 | `26-01-2015>` |          | X        | X        |          |
 | `27-01-2015>` |          |          |          | X        |
 
-## 1.9 Reporting
+### 1.9 Reporting
 
 Here is a table listing all the bugs classified by severity:
 
 %% TODO: ADD TABLE
 
 See `Github Action` results for the details
+
+# Sprint 2: Test Project Setup
+
+## 1. Installing Java
+
+The first step is to install the JDK. Cucumber is compatible with all versions above 11 as we can see in the [cucumber-jvm](https://github.com/cucumber/cucumber-jvm/blob/main/pom.xml) pom file. :
+
+```
+<requireJavaVersion>
+    <version>[11,)</version>
+</requireJavaVersion>
+```
+
+Here I'll be using the latest version of the JDK installer LTS version for mac os, which is today `jdk-23` found at [oracle.com](https://www.oracle.com/java/technologies/downloads/#jdk23-mac). At the end of the installation, we are granted with success message:
+
+<img src="docs/java-install.png" alt="java installation success message" width="500">
+
+We can finally make sure the installation process as well as the integration into VSCode went well by checking the version of the JDK:
+
+```bash
+% java -version
+
+java version "23.0.2" 2025-01-21
+Java(TM) SE Runtime Environment (build 23.0.2+7-58)
+Java HotSpot(TM) 64-Bit Server VM (build 23.0.2+7-58, mixed mode, sharing)
+```
+
+## 2. Maven
+
+### 2.1 Installation
+
+The next step is to install Maven (build and dependencies management):
+
+```bash
+% brew install maven
+```
+
+This step is pretty verbose and takes a few minutes to complete. At the end, we can check the installation by asking for the Maven version:
+
+```bash
+% mvn -version
+
+Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)
+Maven home: /opt/homebrew/Cellar/maven/3.9.9/libexec
+Java version: 23.0.1, vendor: Homebrew, runtime: /opt/homebrew/Cellar/openjdk/23.0.1/libexec/openjdk.jdk/Contents/Home
+Default locale: en_BE, platform encoding: UTF-8
+OS name: "mac os x", version: "14.5", arch: "aarch64", family: "mac"
+```
+
+### 2.2 Initializing the Maven Project
+
+We can now initialize the Maven project. We could do this from the command line using an archetype for a quickstart project. However, for the sake of the exercise, I thought it would be more interesting to do it from scratch. Therefore, I'll manually create a folder structure that will suits our use case and add a pom file.
+
+My pom file skeleton will already define my group id set to `online.automationintesting` to match the domain of the website we are testing. The artifact id will be `interview` to reveal the purpose of the project. The version will be set to `1.0-SNAPSHOT` as we are just starting the project.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>online.automationintesting</groupId>
+  <artifactId>interview</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+</project>
+```
+
+I haven't included a build section yet since I will be running my tests using a JUnit runner. If needed for the GitHub Actions, I will add it later.
+
+### 2.3 Adding Dependencies
+
+We are now ready to add our dependencies. We need the following libraries:
+
+- Cucumber for the BDD approach
+- Cucumber JUnit for the test runner
+- RestAssured for the API testing
+- Jackson for the JSON de/serialization
+
+If needed, I will also make use of a library to compare json files to check the API's response to ease a bit my task. But for now, let's head to [mvn repository website](https://mvnrepository.com/) and add the above dependencies to our pom file:
+
+```xml
+<dependencies>
+  <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+  <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.18.2</version>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-java -->
+  <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>7.20.1</version>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-junit -->
+  <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-junit</artifactId>
+      <version>7.20.1</version>
+      <scope>test</scope>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
+  <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>5.5.0</version>
+      <scope>test</scope>
+  </dependency>
+</dependencies>
+```
+
+Finally, we can run the following command to download the dependencies:
+
+```bash
+% mvn run install
+...
+[INFO] BUILD SUCCESS
+```
+
+## 3. Project Structure
+
+I would normally update the structure of the project as I go whenever a new need appears, but since the dependencies are already known and since I would like to deliver of first working increment at the end of this sprint, I'll already define the structure of the project as follow:
+
+```
+bnppf_interview/
+├── docs/                                    # Documentation for the project, images, other than readme.md
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── online/
+│   │   │       └── automationintesting/
+│   │   │           ├── pojos/               # POJO classes for request/response mapping
+│   │   │           └── config/              # Configuration classes to setup the test environment
+│   │   └── resources/
+│   │       └── application.properties       # Base URL, API keys, or other test configurations
+│   ├── test/
+│   │   ├── java/
+│   │   │   └── online/
+│   │   │       └── automationintesting/
+│   │   │           ├── hooks/               # Cucumber hooks for setup and teardown
+│   │   │           ├── runners/             # Test runner classes for Cucumber
+│   │   │           ├── stepdefinitions/     # Step definition classes for Cucumber
+│   │   │           └── utils/               # Utility classes for testing (e.g., JSON serialization & comparison, ...)
+│   │   └── resources/
+│   │       ├── features/                    # Cucumber feature files
+│   │       ├── data/                        # Test data in JSON format
+│   │       ├── schemas/                     # JSON schemas for validation
+│   │       └── logs/                        # Logs generated during test execution
+│   └── test-reports/                        # Test reports (e.g., HTML, JSON, or XML)
+├── pom.xml                                  # Maven build configuration and dependencies
+└── readme.md                                # Documentation for the project
+```
+
+## 4. Junit Runner for Cucumber
+
+Now that the project structure is set up, we can start writing the JUnit runner for Cucumber. This class will be responsible for running the Cucumber tests. It solely needs to know where the feature files and step definitions are located. I also added a few plugins to generate a pretty report in HTML format and a JSON report for further processing inside the `test-reports` folder:
+
+```java
+package online.automationintesting.runners;
+
+import org.junit.runner.RunWith;
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+    features = "src/test/resources/features",
+    glue = "online.automationintesting.stepdefinitions",
+    plugin = {"pretty", "html:src/test-reports/cucumber-report.html", "json:src/test-reports/cucumber-report.json"})
+public class JUnitCucumberRunner {
+}
+```
+
+## 5. Sanity Checks
+
+Now let's write some sanity check to make sure that:
+
+- Cucumber is correctly installed
+- RestAssured is correctly installed
+- Junit runner is correctly set up to run feature files, find the step definitions and generate html & json reports
+
+### 5.1 Creating a Feature File to ping Binance API
+
+Let's create a feature file to ping the Binance API and check if the response status code is 200. This will be our first test to make sure that the setup is correct:
+
+```gherkin
+Feature: Sanity checks
+
+  Scenario: Ping Binance API
+   Given I use the Binance API
+     And I use the endpoint "/api/v1/ping"
+    When I send a "GET" request
+    Then I should receive a 200 status code
+```
+
+### 5.2 Adding the Step Definitions
+
+Now let's add the step definitions for the feature file. We will use RestAssured to send the request and check the status code:
+
+```java
+package online.automationintesting.stepdefinitions;
+
+import static io.restassured.RestAssured.given;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.When;
+import io.cucumber.java.en.Then;
+import io.restassured.response.Response;
+
+public class SanityChecks {
+
+    private String endpoint;
+    private Response response;
+
+    @Given("I use the Binance API")
+    public void i_use_the_binance_api() {
+        // Set the base URI for Binance API
+        io.restassured.RestAssured.baseURI = "https://api.binance.com";
+    }
+
+    @Given("I use the endpoint {string}")
+    public void i_use_the_endpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    @When("I send a {string} request")
+    public void i_send_a_request(String method) {
+        response = given().when().request(method, endpoint);
+    }
+
+    @Then("I should receive a {int} status code")
+    public void i_should_receive_a_status_code(int statusCode) {
+        response.then().statusCode(statusCode);
+    }
+}
+```
+
+### 5.3 Running the Tests
+
+The test runs correctly, JUnit runner is able to find the feature file, the step definitions and generate the HTML and JSON reports. The test passes as expected:
+
+<img src="docs/sanity-checks.png" alt="sanity checks" width="350">
+
+## 6. Deliverables
+
+Now that I have completed the first sprint, I can commit my changes to Github with the basic project setup, folder structure, the JUnit runner and a sanity check. I will tag this version as `v1.0`.
+
+The first sprint is now completed. We are now ready to move on to the crispy part: `start coding the Booking endpoint test suites`.

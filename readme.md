@@ -53,7 +53,7 @@ Since Scrum is the preferred Dev Methodology for the position, I'll split my wor
 This process would normally take place over the course of several `Sprint Planning` sessions. Since the exercise is quite concise and I am working alone, I'll already shape the whole agenda in this section. I'll try to split the sprints in a logical way. Here is the general planning for the next sprints:
 
 - Sprint 1: `Test Plan`, `Testing Project Setup` and `Boiler Plate Project Release`
-- Sprint 2: `Booking` endpoint testing
+- Sprint 2: `Auth` & `Booking` endpoints testing
 - Sprint 3: `Messages`endpoint testing
 - Sprint 4: `CI/CD Pipeline Integration` and `Reporting`
 
@@ -70,7 +70,7 @@ Let's assume that BNPPF has an overarching `Test Strategy`that gives general gui
 
 This is of course a very light of a `Test Strategy` but it will be enough for the purpose of this exercise.
 
-# Sprint 1
+# Sprint 1 - Test Plan, Testing Project Setup and Boiler Plate Project Release
 
 ## 1. Test Plan
 
@@ -94,7 +94,7 @@ Testing the UI of the website including:
 
 ### 1.4 Test Approach
 
-#### Types of Testing
+#### 1.4.1 Types of Testing
 
 We will perform the following types of testing:
 
@@ -105,7 +105,7 @@ We will perform the following types of testing:
 
 `Performance Testing` is out of the scope of this exercise.
 
-#### Test Scenarios Definitions
+#### 1.4.2 Test Scenarios Definitions
 
 All test scenarios will be described using the Gherkin language. Each of the two endpoints will be covered by three separate features files. Here is an example for the `Booking` endpoint:
 
@@ -401,3 +401,98 @@ The test runs correctly, JUnit runner is able to find the feature file, the step
 Now that I have completed the first sprint, I can commit my changes to Github with the basic project setup, folder structure, the JUnit runner and a sanity check. I will tag this version as `v1.0.0`.
 
 The first sprint is now completed. We are now ready to move on to the crispy part: `start coding the Booking endpoint test suites`.
+
+# Sprint 2 - Booking Endpoint Testing
+
+In this second scprint, we will define the test scenarios for the Booking endpoint and implement them using Cucumber and RestAssured. Let's start by going through the OpenAPI documentation.
+
+## 1. Preliminary Analysis
+
+The fact that the API is documented using `Swagger` means that we are in presence of a `RESTful API`. This is a good news as `SoapUI` API are more complex to test and require more time to set up.
+
+In order to make our coding experience more enjoyable and straightforward, we will first summarize the information from the OpenAPI documentation into a table with all the information we need to know to write the test scenarios.
+
+But before, let's play a bit with the API using `Postman` to get a general understanding of the API's behavior and the operation characteristics and chaining.
+
+### 1.1 Postman Project
+
+Here is the list of the operations available for the different endpoints:
+
+<img src="docs/postman-project.png" alt="postman project" width="300">
+
+As you can see, there is another endpoint called `/auth/login` that is not documented in the OpenAPI documentation. I found it after realizing that most of the `Booking` operations require authentication. After playing a bit with the Web Application, I realized that there was an admin panel:
+
+<img src="docs/admin-login-screen.png" alt="admin login screen" width="400">
+
+After inspecting the network requests, I found the `/auth/login` endpoint:
+
+<img src="docs/admin-network-request.png" alt="login request interception" width="600">
+
+As annouced in the OpenAPI documentation for the `Booking` endpoint, we need a token located in a cookie in order to used for most of the operations. After logging in, the cookie can be found in the `Application` tab of the `Developer Tools`:
+
+<img src="docs/session-token.png" alt="login request interception" width="600">
+
+### 1.2 The Hidden Endpoint: Auth
+
+By looking at the other 2 endpoints URLs, I was able to determine that the `Auth` endpoint OpenAPI documentation is located at `https://automationintesting.online/auth/swagger-ui/index.html`.
+
+### 1.3 The Other Hidden Endpoint: Room
+
+I also found another endpoint called `Room` that is not documented in the OpenAPI documentation. It is located at `https://automationintesting.online/room/swagger-ui/index.html`. Since this is not required for the exercise, I will not test it nor refer to it from now on. If it pops up during the testing, I will at least be aware of its existence.
+
+## 2. OpenAPI Documentation
+
+Let's summarize the information from the OpenAPI documentation for the `Auth` and `Booking` endpoints in a form suitable to coding the test scenarios.
+
+### 2.1 Auth Endpoint
+
+This table summarizes the information from the OpenAPI documentation for the Auth endpoint:
+
+| Operation   | Path         | Method | Auth Required? | Parameters                         | Returns / Action                         | Description            |
+| ----------- | ------------ | ------ | -------------- | ---------------------------------- | ---------------------------------------- | ---------------------- |
+| createToken | /auth/login  | POST   | Not Required   | username, password in body as json | Returns a `Token` object inside a cookie | Authenticates the user |
+| deleteToken | /auth/logout | POST   | Required       | token in body as json & header     | Deletes the `Token` from the cookies     | Logs out the user      |
+
+For quick reference, here is the `Token` object schema:
+
+```json
+"Token": { "type": "object", "properties": { "token": { "type": "string" } } }
+```
+
+### 2.2 Booking Endpoint
+
+This table summarizes the information from the OpenAPI documentation for the Booking endpoint:
+
+| Operation  | Path          | Method | Auth Required? | Parameters | Returns                 | Description |
+| ---------- | ------------- | ------ | -------------- | ---------- | ----------------------- | ----------- |
+| getBooking | /booking/{id} | GET    | Required       |            | Get a booking by its ID | Returns     |
+
+## General Remarks about the OpenAPI Documentation
+
+When it comes to the Swagger documentation, I don't know what was the intent of the Dev Team. Are they willing to give all possible informations about the API or just enough for `ìnformed users`? Therefore, I won't classify my findings as `defects`. I'll rather name them `Request For Change` and let the Dev Team investigate these points and if necessary convert them to `Defects` or `User Stories`.
+
+This being said, I would do the following recommendations to the Dev Team regarding the OpenAPI documentation:
+
+| RFC ID  | Description                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| RFC 001 | All three swagger files have a generic title: `API Documentation`. I would advice to have a more specific title for each endpoint             |
+| RFC 002 | All operations give an example response only for the `200` status code. I would be nice to have examples for other status codes as well       |
+| RFC 003 | In all operations that require authentication, the cookie is listed as `not required`. This is misleading. I would advice to make it required |
+| RFC 004 | The `createToken` operation does not specify that it will set a token in a cookie. I would advice to add this information in the description  |
+
+## Deliverables
+
+At the end of this sprint, I will commit my changes to Github with the test scenarios for the Booking endpoint and the implementation of the test suites. I will tag this version as `v2.0.0`.
+
+Here is the list of the deliverables for this sprint:
+
+- `Postman Project`: All the operations for the 3 endpoints to play with the API and understand its behavior
+- `AuthUnitTesting.feature`: Positive and Negative scenarios for the Auth operations in isolation with valid and invalid data
+- `AuthIntegrationTesting.feature`: Positive and Negative scenarios for the Auth operations in integration with valid and invalid data
+- `AuthDataTesting.feature`: Boundary values, Incorrect type, Incomplete parameter list, Incorrect parameter location scenarios for the Auth operations
+- `BookingUnitTesting.feature`: Positive and Negative scenarios for the Booking operations in isolation with valid and invalid data
+- `BookingIntegrationTesting.feature`: Positive and Negative scenarios for the Booking operations in integration with valid and invalid data
+- `BookingDataTesting.feature`: Boundary values, Incorrect type, Incomplete parameter list, Incorrect parameter location scenarios for the Booking operations
+- `POJO classes`: Classes to map the request and response bodies for the `Auth` and `Booking` endpoints
+- `Common Step Definitions`: Step definitions that are common to all the feature files (e.g., setting the base URI, sending requests, checking status codes, ...)
+- `Utils classes`: Utility classes for testing (e.g., JSON serialization & comparison, ...)

@@ -230,6 +230,7 @@ We are now ready to add our dependencies. We need the following libraries:
 - Cucumber JUnit for the test runner
 - RestAssured for the API testing
 - Jackson for the JSON de/serialization
+- Cucumber Picocontainer for dependency injection to share the state between the steps from different classes
 
 If needed, I will also make use of a library to compare json files to check the API's response to ease a bit my task. But for now, let's head to [mvn repository website](https://mvnrepository.com/) and add the above dependencies to our pom file:
 
@@ -237,22 +238,28 @@ If needed, I will also make use of a library to compare json files to check the 
 <dependencies>
   <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
   <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.18.2</version>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.2</version>
   </dependency>
   <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-java -->
   <dependency>
-      <groupId>io.cucumber</groupId>
-      <artifactId>cucumber-java</artifactId>
-      <version>7.20.1</version>
+    <groupId>io.cucumber</groupId>
+    <artifactId>cucumber-java</artifactId>
+    <version>7.20.1</version>
   </dependency>
   <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-junit -->
   <dependency>
-      <groupId>io.cucumber</groupId>
-      <artifactId>cucumber-junit</artifactId>
-      <version>7.20.1</version>
-      <scope>test</scope>
+    <groupId>io.cucumber</groupId>
+    <artifactId>cucumber-junit</artifactId>
+    <version>7.20.1</version>
+    <scope>test</scope>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-picocontainer -->
+  <dependency>
+    <groupId>io.cucumber</groupId>
+    <artifactId>cucumber-picocontainer</artifactId>
+    <version>7.20.1</version>
   </dependency>
   <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
   <dependency>
@@ -467,7 +474,125 @@ This table summarizes the information from the OpenAPI documentation for the Boo
 | ---------- | ------------- | ------ | -------------- | ---------- | ----------------------- | ----------- |
 | getBooking | /booking/{id} | GET    | Required       |            | Get a booking by its ID | Returns     |
 
-## General Remarks about the OpenAPI Documentation
+## 3. Test Scenarios
+
+### 3.1 Auth Endpoint
+
+Here are the test scenarios for the `login` operation:
+
+| Feature File | Scenario | Description                                              | Expected Result                                      |
+| ------------ | -------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| Auth.feature | Positive | Authenticate with valid credentials                      | 200 status code + cookie containing a session token  |
+|              | Negative | Authenticate with invalid credentials                    | 403 status code (Forbidden)                          |
+|              |          | Authenticate with valid credentials and incorrect method | 405 status code + error message "Method Not Allowed" |
+|              |          | Authenticate without credentials                         | 415 status code (Unsupported Media Type)             |
+
+## 4. Implementation
+
+### 4.1 Gherkin Language Usage with RestAssured
+
+When using Gherkin language with RestAssured, it is advised to use Gherkin keywords as follows:
+
+- Given: should be used to set up the request specifications (e.g., base URI, headers, parameters, ...)
+- When: should be used to send the request using one of the HTTP methods (e.g., GET, POST, PUT, DELETE, ...)
+- Then: should be used to check the response (e.g., status code, response body, response headers, ...)
+
+### 4.2 Common Step Definitions
+
+I will create a `CommonSteps` class that will take care of the most commonly used functions:
+
+- Setting the base URI: `Given I test APIs on the base URI "https://automationintesting.online"`
+- Setting the endpoint: `Given I test the endpoint "/auth/login"`
+- Sending the request: `When I send a "POST" request`
+- Checking the response status code: `Then the response should have a status code 200`
+- Checking the response for the presence of a key in the cookies: `Then the response should have a cookie with a "token" key`
+- and so on ...
+
+Please refer to the code to see all the available methods.
+
+### 4.3 Dependency Injection
+
+Since I am using Common Steps, this means that all my step definitions won't reside in a single class for a single feature file. Therefore, I will need to share a state between the steps from different classes. This can be done using `Picocontainer` which is a dependency injection library for Cucumber.
+
+It's usage is pretty straightforward. I first need to create a utility class that will hold the desired information about the state and use it as a parameter to construct all my classes that need to share the state.
+
+For the moment, I just need to share the request specification as well as the response. Here is my `TestContext` class:
+
+```java
+package online.automationintesting.utils;
+
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+
+public class TestContext {
+    private RequestSpecBuilder requestSpecBuilder;
+    private Response response;
+
+    public TestContext() {
+      this.requestSpecBuilder = new RequestSpecBuilder().addHeader("Cache-Control", "no-cache").addHeader("Host", "automationintesting.online");
+      this.response = null;
+    }
+
+    public RequestSpecBuilder getRequestSpecBuilder() {
+        return this.requestSpecBuilder;
+    }
+
+    public RequestSpecification getRequestSpecification() {
+        return this.requestSpecBuilder.build();
+    }
+
+    public void setResponse(Response _response) {
+        this.response = _response;
+    }
+
+    public Response getResponse() {
+        return this.response;
+    }
+}
+```
+
+### 4.4 POJO Classes
+
+I am making use of POJO classes to map the request and response bodies to send and receive data from the API and convert them to or from JSON. Here is an example used for the serialization of the request body for the `credentials`:
+
+```java
+package online.automationintesting.pojo;
+
+public class Credentials {
+    private String username;
+    private String password;
+
+    // Constructor
+    public Credentials(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    // Getters and setters
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+```
+
+### 4.5 Step Definitions
+
+Apart from the points above, there is nothing very interesting to say about the step definitions implementation. Please refer to the code to see how I managed this part.
+
+## 5. General Remarks about the OpenAPI Documentation
 
 When it comes to the Swagger documentation, I don't know what was the intent of the Dev Team. Are they willing to give all possible informations about the API or just enough for `ìnformed users`? Therefore, I won't classify my findings as `defects`. I'll rather name them `Request For Change` and let the Dev Team investigate these points and if necessary convert them to `Defects` or `User Stories`.
 
@@ -480,7 +605,7 @@ This being said, I would do the following recommendations to the Dev Team regard
 | RFC 003 | In all operations that require authentication, the cookie is listed as `not required`. This is misleading. I would advice to make it required |
 | RFC 004 | The `createToken` operation does not specify that it will set a token in a cookie. I would advice to add this information in the description  |
 
-## Deliverables
+## 6. Deliverables
 
 At the end of this sprint, I will commit my changes to Github with the test scenarios for the Booking endpoint and the implementation of the test suites. I will tag this version as `v2.0.0`.
 

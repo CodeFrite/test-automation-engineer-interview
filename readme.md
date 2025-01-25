@@ -152,9 +152,9 @@ Here is a table listing all the bugs classified by severity:
 
 See `Github Action` results for the details
 
-# Sprint 2: Test Project Setup
+## 2. Test Project Setup
 
-## 1. Installing Java
+### 2.1 Installing Java
 
 The first step is to install the JDK. Cucumber is compatible with all versions above 11 as we can see in the [cucumber-jvm](https://github.com/cucumber/cucumber-jvm/blob/main/pom.xml) pom file. :
 
@@ -178,9 +178,9 @@ Java(TM) SE Runtime Environment (build 23.0.2+7-58)
 Java HotSpot(TM) 64-Bit Server VM (build 23.0.2+7-58, mixed mode, sharing)
 ```
 
-## 2. Maven
+### 2.2 Maven
 
-### 2.1 Installation
+#### 2.2.1 Installation
 
 The next step is to install Maven (build and dependencies management):
 
@@ -200,7 +200,7 @@ Default locale: en_BE, platform encoding: UTF-8
 OS name: "mac os x", version: "14.5", arch: "aarch64", family: "mac"
 ```
 
-### 2.2 Initializing the Maven Project
+#### 2.2.2 Initializing the Maven Project
 
 We can now initialize the Maven project. We could do this from the command line using an archetype for a quickstart project. However, for the sake of the exercise, I thought it would be more interesting to do it from scratch. Therefore, I'll manually create a folder structure that will suits our use case and add a pom file.
 
@@ -222,7 +222,7 @@ My pom file skeleton will already define my group id set to `online.automationin
 
 I haven't included a build section yet since I will be running my tests using a JUnit runner. If needed for the GitHub Actions, I will add it later.
 
-### 2.3 Adding Dependencies
+#### 2.2.3 Adding Dependencies
 
 We are now ready to add our dependencies. We need the following libraries:
 
@@ -398,6 +398,6 @@ The test runs correctly, JUnit runner is able to find the feature file, the step
 
 ## 6. Deliverables
 
-Now that I have completed the first sprint, I can commit my changes to Github with the basic project setup, folder structure, the JUnit runner and a sanity check. I will tag this version as `v1.0`.
+Now that I have completed the first sprint, I can commit my changes to Github with the basic project setup, folder structure, the JUnit runner and a sanity check. I will tag this version as `v1.0.0`.
 
 The first sprint is now completed. We are now ready to move on to the crispy part: `start coding the Booking endpoint test suites`.

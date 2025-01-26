@@ -9,10 +9,11 @@ import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-public class CommonSteps {
+public class  CommonStepDefinitions{
   private TestContext testContext;
 
-  public CommonSteps(TestContext context) {
+  // Dependency Injection: Sharing state between step definitions
+  public CommonStepDefinitions(TestContext context) {
       this.testContext = context;
   }
   

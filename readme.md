@@ -552,7 +552,9 @@ I will create a `CommonSteps` class that will take care of the most commonly use
 
 Please refer to the code to see all the available methods.
 
-### 4.3 Dependency Injection
+### 4.3 Sharing State Between Step Definitions
+
+#### 4.3.1 Dependency Injection
 
 Since I am using Common Steps, this means that all my step definitions won't reside in a single class for a single feature file. Therefore, I will need to share a state between the steps from different classes. This can be done using `Picocontainer` which is a dependency injection library for Cucumber.
 
@@ -590,6 +592,52 @@ public class TestContext {
 
     public Response getResponse() {
         return this.response;
+    }
+}
+```
+
+#### 4.3.2 Storing Key/Value Pairs in the Test Context
+
+I will also need to store key/value pairs in the `TestContext` class. For example, when authenticating the user or creating a new rooms, I will need to store the `token` and the `room_id` in the `TestContext` class to be able to use them in the following steps.
+
+This can easily be done using a `HashMap`:
+
+```java
+package online.automationintesting.utils;
+
+import java.util.HashMap;
+
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+
+public class TestContext {
+    ...
+    private HashMap<String, Object> store;
+
+    public TestContext() {
+      ...
+      this.store = new HashMap<String, Object>();
+    }
+
+    ...
+
+    /**
+     * Stores a key-value pair in the Test Context store
+     * @param key Key to store
+     * @param value Value to store
+     */
+    public void storeValue(String key, Object value) {
+        this.store.put(key, value);
+    }
+
+    /**
+     * Retrieves a value from the Test Context store
+     * @param key Key to retrieve
+     * @return Value stored in the key or null if the key does not exist
+     */
+    public Object getValue(String key) {
+        return this.store.get(key);
     }
 }
 ```

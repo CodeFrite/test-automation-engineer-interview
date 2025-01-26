@@ -49,4 +49,23 @@ public class  CommonStepDefinitions{
   public void the_response_should_have_a_json_body_with_key_value(String key, String value) {
     this.testContext.getResponse().then().body(key, org.hamcrest.Matchers.equalTo(value));
   }
+
+  /**
+   * Asserts that a key exists in the Test Context store
+   * @param key Key to check for in the Test Context store
+   */
+  @Then("the context should have a key {string}")
+  public void the_context_should_have_a_key(String key) {
+    Assert.assertNotNull(this.testContext.getValue(key));
+  }
+
+  /**
+   * Asserts that a key does not exist in the Test Context store
+   * @param key Key to check for in the Test Context store
+   */
+  @Then("the context should not have a key {string}")
+  public void the_context_should_not_have_a_key(String key) {
+    Assert.assertNull(this.testContext.getValue(key));
+  }
+
 }

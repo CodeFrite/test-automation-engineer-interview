@@ -60,9 +60,4 @@ public class AuthStepDefinitions {
   public void i_should_get_a_response_with_status_code(Integer code) {
     this.testContext.getResponse().then().statusCode(code);
   }
-
-  @Then("the context should have a key {string}")
-  public void the_context_should_have_a_key(String key) {
-    Assert.assertNotNull(this.testContext.getValue(key));
-  }
 }

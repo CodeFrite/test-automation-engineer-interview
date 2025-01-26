@@ -455,16 +455,19 @@ Let's summarize the information from the OpenAPI documentation for the `Auth` an
 
 This table summarizes the information from the OpenAPI documentation for the Auth endpoint:
 
-| Operation   | Path         | Method | Auth Required? | Parameters                         | Returns / Action                         | Description            |
-| ----------- | ------------ | ------ | -------------- | ---------------------------------- | ---------------------------------------- | ---------------------- |
-| createToken | /auth/login  | POST   | Not Required   | username, password in body as json | Returns a `Token` object inside a cookie | Authenticates the user |
-| deleteToken | /auth/logout | POST   | Required       | token in body as json & header     | Deletes the `Token` from the cookies     | Logs out the user      |
+| Operation     | Path           | Method | Auth Required? | Parameters                         | Returns / Action                         | Description            |
+| ------------- | -------------- | ------ | -------------- | ---------------------------------- | ---------------------------------------- | ---------------------- |
+| createToken   | /auth/login    | POST   | Not Required   | username, password in body as json | Returns a `Token` object inside a cookie | Authenticates the user |
+| deleteToken   | /auth/logout   | POST   | Required       | token in body as json & header     | Deletes the `Token` from the cookies     | Logs out the user      |
+| validateToken | /auth/validate | POST   | Required       | token in body as json & header     | ??? haven't checked yet its usage        | Validates the token    |
 
 For quick reference, here is the `Token` object schema:
 
 ```json
 "Token": { "type": "object", "properties": { "token": { "type": "string" } } }
 ```
+
+We will only be testing the `createToken` operation as it is the only one needed for the `Booking` and `Messages` operations.
 
 ### 2.2 Booking Endpoint
 
@@ -486,6 +489,45 @@ Here are the test scenarios for the `login` operation:
 |              | Negative | Authenticate with invalid credentials                    | 403 status code (Forbidden)                          |
 |              |          | Authenticate with valid credentials and incorrect method | 405 status code + error message "Method Not Allowed" |
 |              |          | Authenticate without credentials                         | 415 status code (Unsupported Media Type)             |
+
+### 3.2 Booking Endpoint
+
+#### 3.2.1 /\{id\} Path
+
+Here are the test scenarios for the `getBooking` operation:
+
+| Feature File | Scenario | Description | Expected Result |
+| ------------ | -------- | ----------- | --------------- |
+
+Here are the test scenarios for the `updateBooking` operation:
+
+| Feature File | Scenario | Description | Expected Result |
+| ------------ | -------- | ----------- | --------------- |
+
+Here are the test scenarios for the `deleteBooking` operation:
+
+| Feature File | Scenario | Description | Expected Result |
+| ------------ | -------- | ----------- | --------------- |
+
+#### 3.2.2 / Path
+
+Here are the test scenarios for the `createBooking` operation:
+
+| Feature File    | Scenario | Description                                      | Expected Result                                       |
+| --------------- | -------- | ------------------------------------------------ | ----------------------------------------------------- |
+| Booking.feature | Positive | Create a booking with valid data in body in json | 201 status code + booking object in the response body |
+
+Here are the test scenarios for the `getBookings` operation:
+
+| Feature File | Scenario | Description | Expected Result |
+| ------------ | -------- | ----------- | --------------- |
+
+#### 3.2.3 /summary Path
+
+Here are the test scenarios for the `getSummaries` operation:
+
+| Feature File | Scenario | Description | Expected Result |
+| ------------ | -------- | ----------- | --------------- |
 
 ## 4. Implementation
 

@@ -84,4 +84,8 @@ public class TestContext {
     public Object getValue(String key) {
         return this.store.get(key);
     }
+
+    public Object removeKeyValue(String key) {
+        return this.store.remove(key);
+    }
 }

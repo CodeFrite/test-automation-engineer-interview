@@ -1,9 +1,11 @@
 Feature: User Authentication
   Test the authentication endpoint:
-    - check if the enpoint is up and running
-    - check if a bad username/password stops us from being authenticated
-    - check if the default username/password credentials are loaded into the system
-    - check if auth returns a token in the cookies
+    - Authenticate the user with valid credentials
+    - Authenticate the user with invalid credentials
+    - Authenticate the user with valid credentials and incorrect method
+    - Authenticate the user without credentials
+
+  Make sure the endpoint returns a session token within a cookie
 
   Background: I am using the hotel API
     Given I test APIs on the base URI "https://automationintesting.online"
@@ -33,4 +35,10 @@ Feature: User Authentication
   Scenario: Authenticate the user without credentials
      When I send a "POST" request
      Then the response should have a status code 415
-      And the response should have a json body with key value "error" / "Bad Request"
+      And the response should have a json body with key value "error" / "Unsupported Media Type"
+
+  # Quick Steps: Since testing this endpoint is not required and I am just using it to be able to test the other endpoints, 
+  # I will created a quick step to authenticate the user with valid credentials and store the token in the context
+  Scenario: Quick Authentication
+    Given I am authenticated
+     Then the context should have a key "token"

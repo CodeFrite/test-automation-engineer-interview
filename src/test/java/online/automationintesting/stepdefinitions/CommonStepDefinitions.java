@@ -44,10 +44,32 @@ public class  CommonStepDefinitions{
     this.testContext.getRequestSpecBuilder().setBasePath(endpoint);
   }
 
+  /**
+   * Loads a JSON request body from a data file located in the 'resources/data' directory
+   * @param path Relative path to the JSON file without the file extension
+   */
+  @Given("I use the json request body from file {string}")
+  public void i_use_the_json_request_body_from_file(String path) throws Exception {
+    // load the JSON file from the resources/data directory
+    File jsonFile = new File("src/test/resources/data/" + path + ".json");
+
+    // parse the JSON file
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode jsonNode = objectMapper.readTree(jsonFile);
+
+    // add the JSON body to the request specification
+    this.testContext.addJsonBody(jsonNode.toString());
+  }
+
+  /* WHEN VERB */
+
+  /**
+   * Sends the in context request with the given HTTP method
+   * @param method HTTP method to use when sending the request
+   */
   @When("I send a {string} request")
   public void i_send_a_request(String method) {
     RequestSpecification requestSpecification = this.testContext.getRequestSpecification();
-    given().spec(requestSpecification).when().log().all().request(method);
     Response response = given().spec(requestSpecification).when().request(method);
     this.testContext.setResponse(response);
   }
@@ -93,7 +115,7 @@ public class  CommonStepDefinitions{
    */
   @Then("the response should have a json body with key value {string} \\/ {string}")
   public void the_response_should_have_a_json_body_with_key_value(String key, String value) {
-    this.testContext.getResponse().then().body(key, org.hamcrest.Matchers.equalTo(value));
+    this.testContext.getResponse().then().assertThat().body(key, org.hamcrest.Matchers.equalTo(value));    
   }
 
   /**

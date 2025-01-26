@@ -680,7 +680,26 @@ public class Credentials {
 
 ### 4.5 Step Definitions
 
-Apart from the points above, there is nothing very interesting to say about the step definitions implementation. Please refer to the code to see how I managed this part.
+#### 4.5.1 Quick Steps
+
+In addition to the `CommonSteps` class, I will also create some quick steps for the `Auth` and `Room` endpoints to quickly set up the test scenarios.
+
+For example, the `Auth` endpoints will have the following quick step:
+
+```gherkin
+Given I am authenticated
+```
+
+This quick step will perform the following actions:
+
+- Setup the Request Specification with all the required information (correct base URI to the `/auth/login` operation, correct body with credentials in json format, correct HTTP method)
+- Store the token in the `TestContext` class under the key `token`
+
+#### 4.5.2 Step Definitions Implementation
+
+Apart from the points above, there is nothing very interesting to say about the step definitions implementation. Some uses JUnit `Assertion Methods`, others `load json test data` from the resources/data folder, others `Serialize Json objects` to pass them to the request builder. In summary, nothing worth documenting.
+
+Please refer to the code to see how I managed this part.
 
 ## 5. General Remarks about the OpenAPI Documentation
 

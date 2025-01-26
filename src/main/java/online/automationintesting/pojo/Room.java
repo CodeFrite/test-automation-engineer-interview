@@ -2,6 +2,8 @@ package online.automationintesting.pojo;
 
 import online.automationintesting.utils.Helper;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import com.github.javafaker.Faker;
 
@@ -17,8 +19,15 @@ public class Room {
   private int roomPrice;
 
   // Room enums
-  public enum RoomType {Single, Double, Twin, Family, Suite};
-  public enum RoomFeature {Wifi, Refreshments, TV, Safe, Radio, Views}
+  public static enum RoomType {Single, Double, Twin, Family, Suite};
+  public static enum RoomFeature {Wifi, Refreshments, TV, Safe, Radio, Views}
+  private static final List<String> IMAGE_URLS = Arrays.asList(
+      "https://img.freepik.com/premium-photo/bedroom-with-large-wall-panel-that-says-i-love-you_657162-961.jpg",
+      "https://img.freepik.com/premium-photo/living-room-with-large-sofa-large-window-overlooking-ocean_865967-5160.jpg",
+      "https://img.freepik.com/premium-photo/living-room-with-large-sofa-large-window-overlooking-ocean_865967-5160.jpg",
+      "https://img.freepik.com/premium-photo/bedroom-with-large-window-that-has-picture-cityscape-it_849761-2556.jpg",
+      "https://img.freepik.com/premium-photo/3d-rendered-interior-bed-room-with-black-tone-black-pillow-black-wall-master-bed-room-plants-sun-light-modern-bedrood_538866-507.jpg"
+    );
 
   public Room(int roomid, String roomName, String type, boolean accessible, String image, String description, String[] features, int roomPrice) {
     this.roomid = roomid;
@@ -62,7 +71,8 @@ public class Room {
   }
 
   public static String generateRandomImage() {
-    return "/images/room" + new Random().nextInt(5) + ".jpg";
+    Integer roomImageIndex = new Random().nextInt(IMAGE_URLS.size());
+    return IMAGE_URLS.get(roomImageIndex);
   }
 
   public static String generateRandomDescription() {

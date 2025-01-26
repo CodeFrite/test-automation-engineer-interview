@@ -752,6 +752,14 @@ In order to not collide with the data already present in the database, and also 
 ```java
 ...
 public class Room {
+  package online.automationintesting.pojo;
+
+  import online.automationintesting.utils.Helper;
+  import java.util.Arrays;
+  import java.util.List;
+  import java.util.Random;
+  import com.github.javafaker.Faker;
+
   // Room schema
   private int roomid;
   private String roomName;
@@ -765,6 +773,11 @@ public class Room {
   // Room enums
   public enum RoomType {Single, Double, Twin, Family, Suite};
   public enum RoomFeature {Wifi, Refreshments, TV, Safe, Radio, Views}
+  private static final List<String> IMAGE_URLS = Arrays.asList(
+    "https://img.freepik.com/premium-photo/bedroom-with-large-wall-panel-that-says-i-love-you_657162-961.jpg",
+    "https://img.freepik.com/premium-photo/living-room-with-large-sofa-large-window-overlooking-ocean_865967-5160.jpg",
+    // ... and some more links to images to use on the website
+  );
 
   public Room(int roomid, String roomName, String type, boolean accessible, String image, String description, String[] features, int roomPrice) {
     this.roomid = roomid;
@@ -792,7 +805,9 @@ public class Room {
 }
 ```
 
-The only piece of code worth mentioning is the `generateRandomFeatures` method that selects a random number of features from the `RoomFeature` enum using the `Helper` class. This class offers a static method that receives a number of choices to make and the total available items and returns an array of the selected items indexes. It is coded around a java `Collection` that we shuffle to add randomness and from which we select the first `x` elements. The `generateRandomFeatures` method then uses this array to select the corresponding `RoomFeature` from an enum and send back their names:
+Two pieces of code are worth mentioning:
+
+- First the `generateRandomFeatures` method that selects a random number of features from the `RoomFeature` enum using the `Helper` class. This class offers a static method that receives a number of choices to make and the total available items and returns an array of the selected items indexes. It is coded around a java `Collection` that we shuffle to add randomness and from which we select the first `x` elements. The `generateRandomFeatures` method then uses this array to select the corresponding `RoomFeature` from an enum and send back their names:
 
 ```java
 package online.automationintesting.utils;
@@ -832,6 +847,15 @@ public class Helper {
     // Return the first x elements
     return values.subList(0, x).toArray(Integer[]::new);
   }
+}
+```
+
+- Second, the generateRandomImage uses a list of image (free to use from https://img.freepik.com/) from which it selects a random one to use as the room image:
+
+```java
+public static String generateRandomImage() {
+  Integer roomImageIndex = new Random().nextInt(IMAGE_URLS.size());
+  return IMAGE_URLS.get(roomImageIndex);
 }
 ```
 

@@ -695,11 +695,145 @@ This quick step will perform the following actions:
 - Setup the Request Specification with all the required information (correct base URI to the `/auth/login` operation, correct body with credentials in json format, correct HTTP method)
 - Store the token in the `TestContext` class under the key `token`
 
+The same goes for the `Room` endpoint which will allow to quickly create a room and store the `room_id` in the `TestContext`:
+
+```gherkin
+Given I have a new room available for booking
+```
+
+The deletion of the room will be done in the `After All` hook if any `room-id` is present in the `Test Context store`.
+
 #### 4.5.2 Step Definitions Implementation
 
 Apart from the points above, there is nothing very interesting to say about the step definitions implementation. Some uses JUnit `Assertion Methods`, others `load json test data` from the resources/data folder, others `Serialize Json objects` to pass them to the request builder. In summary, nothing worth documenting.
 
 Please refer to the code to see how I managed this part.
+
+### 4.6 Non Reproducible Test Executions: The 'Room' Endpoint
+
+While developing the test scenarios for the 'booking' endpoint, I quickly ran into the following problem. The 'automationintesting.online' website is a shared environment. Bookings constantly get added to the database and the `rooms` regularly get updated or even worse deleted. This means that the `booking` scenarios I am working on are not reproducible.
+
+I have two choices:
+
+- Find the `Github repository` of the website, deploy the application locally and run the API against my local environment
+- Use the `Room` endpoint to create a room `BeforeAll` test execution
+
+If I use the first option, I will still have to keep track of the rooms and associated bookings and dynamically update them during the test execution.
+
+Therefore I will go with the second option as it is fastest way to quickly advance on the core business: `testing the booking and message endpoints`.
+
+**To be fair to the other participants** and not overload the UI & database with my test data, I will make sure to delete the room at the end of the test execution. From what I have seen in the Network tab of the Developer Tools, when a Room gets deleted, all the associated bookings are also deleted. This is a good news as I won't have to delete the bookings manually.
+
+Let's get started.
+
+#### 4.6.1 Room Endpoint: Quick Steps for Creating and Deleting a Room
+
+The `Room` endpoint is documented here: `https://automationintesting.online/room/swagger-ui/index.html`. In my case, I will just need to be able to create and delete a room. Here are the information about these two operations:
+
+| Operation  | Path  | Method | Auth Required? | Parameters                    | Returns                                            | Description        |
+| ---------- | ----- | ------ | -------------- | ----------------------------- | -------------------------------------------------- | ------------------ |
+| createRoom | /room | POST   | Required       | `Room Object` in body as Json | 201 status code + Room object in the response body | Creates a new room |
+| deleteRoom | /room | DELETE | Required       | `roomi`d in query             | 204 status code                                    | Deletes a room     |
+
+I will define the following associated Steps for these operations:
+
+```gherkin
+Given I have a new room available for booking with id "room-1"
+ When I delete the room with the id "room-1"
+```
+
+As expected, the first one sends a request to the `automationintesting.online` API server to create a new room and stores the returned `roomid` in the `TestContext` store.
+The second sends a request to the `automationintesting.online` API server to delete the room and deletes the associated key/value pair from the `TestContext` store.
+
+#### 4.6.2 Generating a Room with Random Data
+
+In order to not collide with the data already present in the database, and also to add a bit of diversity to the test data, I will generate `Random Room Information` using the library `faker`. Coupled with a POJO class with the necessary getters for the serialization by `jackson`, I get the following implementation:
+
+```java
+...
+public class Room {
+  // Room schema
+  private int roomid;
+  private String roomName;
+  private String type;
+  private boolean accessible;
+  private String image;
+  private String description;
+  private String[] features;
+  private int roomPrice;
+
+  // Room enums
+  public enum RoomType {Single, Double, Twin, Family, Suite};
+  public enum RoomFeature {Wifi, Refreshments, TV, Safe, Radio, Views}
+
+  public Room(int roomid, String roomName, String type, boolean accessible, String image, String description, String[] features, int roomPrice) {
+    this.roomid = roomid;
+    this.roomName = roomName;
+    ... // and more setters
+  }
+
+  public static Room generateRandom() {
+    return new Room(
+      Room.generateRandomRoomId(),
+      Room.generateRandomRoomName(),
+      // ... and more calls to get random data for each field
+    );
+  }
+
+  // Getters for Jackson to serialize the object to JSON
+  public int getRoomid() { return roomid; }
+  public String getRoomName() { return roomName; }
+  // ... and more getters for the other fields
+
+  public static int generateRandomRoomId() { return new Random().nextInt(1000); }
+  public static boolean generateRandomAccessible() { return new Random().nextBoolean(); }
+  public static String generateRandomDescription() { return new Faker().lorem().sentence(); }
+  // ... and more methods to generate random data
+}
+```
+
+The only piece of code worth mentioning is the `generateRandomFeatures` method that selects a random number of features from the `RoomFeature` enum using the `Helper` class. This class offers a static method that receives a number of choices to make and the total available items and returns an array of the selected items indexes. It is coded around a java `Collection` that we shuffle to add randomness and from which we select the first `x` elements. The `generateRandomFeatures` method then uses this array to select the corresponding `RoomFeature` from an enum and send back their names:
+
+```java
+package online.automationintesting.utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+// pojo/Room.java
+public static String[] generateRandomFeatures() {
+  Integer numFeatures = new Random().nextInt(5);
+  Integer[] selectedFeatures = Helper.getRandomDistinctValues(numFeatures, 5);
+  String[] features = new String[numFeatures];
+  for (int i = 0; i < numFeatures; i++) {
+    features[i] = RoomFeature.values()[selectedFeatures[i]].toString();
+  }
+  return features;
+}
+
+// utils/Helper.java
+public class Helper {
+  /**
+   * Generates a list of x random distinct values from 0 to y-1
+   * @param x Number of values to generate
+   * @param y Maximum value (exclusive)
+   * @return List of x random distinct values
+   */
+  public static Integer[] getRandomDistinctValues(int x, int y) {
+    // Generate a list of values from 0 to y-1
+    List<Integer> values = new ArrayList<>();
+    for (int i = 0; i < y; i++) {
+        values.add(i);
+    }
+    // Shuffle the list to randomize the order
+    Collections.shuffle(values, new Random());
+    // Return the first x elements
+    return values.subList(0, x).toArray(Integer[]::new);
+  }
+}
+```
 
 ## 5. General Remarks about the OpenAPI Documentation
 
@@ -721,12 +855,9 @@ At the end of this sprint, I will commit my changes to Github with the test scen
 Here is the list of the deliverables for this sprint:
 
 - `Postman Project`: All the operations for the 3 endpoints to play with the API and understand its behavior
-- `AuthUnitTesting.feature`: Positive and Negative scenarios for the Auth operations in isolation with valid and invalid data
-- `AuthIntegrationTesting.feature`: Positive and Negative scenarios for the Auth operations in integration with valid and invalid data
-- `AuthDataTesting.feature`: Boundary values, Incorrect type, Incomplete parameter list, Incorrect parameter location scenarios for the Auth operations
-- `BookingUnitTesting.feature`: Positive and Negative scenarios for the Booking operations in isolation with valid and invalid data
-- `BookingIntegrationTesting.feature`: Positive and Negative scenarios for the Booking operations in integration with valid and invalid data
-- `BookingDataTesting.feature`: Boundary values, Incorrect type, Incomplete parameter list, Incorrect parameter location scenarios for the Booking operations
-- `POJO classes`: Classes to map the request and response bodies for the `Auth` and `Booking` endpoints
+- `Auth feature and Step Definitions`: Contains the test scenarios for the Auth `login` operations as well as the quick steps to authenticate the user and store the token in the `Test Context`
+- `Room feature and Step Definitons`: Contains the two quick steps scenarios to create a room and delete it (and the associated key in the `Test Context`)
+- `Booking feature and Step Definitions`: Scenarios for the Booking operations, positive/negative, in isolation/integration, with valid/invalid data, boundary values, incorrect types, incomplete parameter list, incorrect parameter location, incorrect HTTP method
+- `POJO classes`: Classes to map the request and response bodies for the `Credentials` and `Room` endpoints
 - `Common Step Definitions`: Step definitions that are common to all the feature files (e.g., setting the base URI, sending requests, checking status codes, ...)
-- `Utils classes`: Utility classes for testing (e.g., JSON serialization & comparison, ...)
+- `TestContext class`: Used to share the state between the step definitions from different classes

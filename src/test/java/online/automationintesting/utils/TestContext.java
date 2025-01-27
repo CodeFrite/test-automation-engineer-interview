@@ -9,7 +9,6 @@ import io.restassured.specification.RequestSpecification;
 public class TestContext {
     private RequestSpecBuilder requestSpecBuilder;
     private Response response;
-
     private HashMap<String, Object> store;
 
     /**
@@ -85,6 +84,11 @@ public class TestContext {
         return this.store.get(key);
     }
 
+    /**
+     * Removes a key-value pair from the Test Context store
+     * @param key Key to remove
+     * @return Value stored in the key or null if the key does not exist
+     */
     public Object removeKeyValue(String key) {
         return this.store.remove(key);
     }

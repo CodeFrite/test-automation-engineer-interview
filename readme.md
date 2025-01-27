@@ -664,26 +664,13 @@ This diagram should be understood as follows:
 - The `Then Expected Result]` is the expected result of the operation
 - After setup, multiple scenarios can be tested in the same test case by chaining `When CRUD Operations` and `Then Expected Result]`
 
-**Positive Scenarios**
+Here is the list of scenarios that will be tested:
 
-| #Scenario | Authenticated? | #Room | #Booking | When CRUD                                    | Then Expected Result                                                         | Defects |
-| --------- | -------------- | ----- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------- | ------- |
-| FP.001    | Yes            | 1     | 0        | When I Create a booking                      | Then I should see a booking with the retrieve id (GET /id)                   | -       |
-|           |                |       |          |                                              | Then I should see the room booking for these dates in summary (GET /summary) |         |
-| FP.004    | Yes            | 1     | 1        | Create a booking for a different room & date | 201 (Created) + booking object in response                                   | -       |
-
-**Negative Scenarios**
-
-| #Scenario | Authenticated? | #Room | #Booking | Description                                                                             | Expected Result                               | Defects |
-| --------- | -------------- | ----- | -------- | --------------------------------------------------------------------------------------- | --------------------------------------------- | ------- |
-| FP.001    | No             | 0     | 0        | Create a booking while not authenticated and room not available (closed for renovation) | Should not be allowed since not authenticated | -       |
-| FN.001    | Yes            | 0     | 0        | Create a booking but room not available (closed for renovation)                         | Should not be allowed since no room created   | -       |
-| FN.002    | Yes            | 1     | 1        | Create a booking but for a room already booked on that particular date                  | 409 (Conflict)                                | -       |
-| FN.003    | Yes            | 1     | 1        | Create a booking but for a room already booked on that period (long stay)               | 409 (Conflict)                                | -       |
-| FN.003    | Yes            | 1     | 0        | Update a non-existing booking                                                           | 404 (Not found)                               | -       |
-| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to see it                                                 | 404 (Not found)                               | -       |
-| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to update it                                              | 404 (Not found)                               | -       |
-| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to delete it again                                        | 404 (Not found)                               | -       |
+- FP.001: Booking a room and check its information as a single booking and in the summary
+- FP.002: When 3 guests book the same room for 3 different periods, the summary should show 3 bookings for the room
+- FP.003: When a booking is cancelled, it should not appear in the summary
+- FP.004: When 2 bookings are made for the same room and the first one is cancelled, the summary should show only the second booking
+- FP.005: When a booking is made and its information are changed, I should see the changes in the booking information
 
 #### 3.2.2 Non-Functional Testing
 
@@ -1121,7 +1108,6 @@ At the end of this sprint, I will commit my changes to Github with the test scen
 
 Here is the list of the deliverables for this sprint:
 
-- `Postman Project`: All the operations for the 3 endpoints to play with the API and understand its behavior
 - `Auth feature and Step Definitions`: Contains the test scenarios for the Auth `login` operations as well as the quick steps to authenticate the user and store the token in the `Test Context`
 - `Room feature and Step Definitons`: Contains the two quick steps scenarios to create a room and delete it (and the associated key in the `Test Context`)
 - `Booking feature and Step Definitions`: Scenarios for the Booking operations, positive/negative, in isolation/integration, with valid/invalid data, boundary values, incorrect types, incomplete parameter list, incorrect parameter location, incorrect HTTP method

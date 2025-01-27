@@ -53,7 +53,7 @@ Since Scrum is the preferred Dev Methodology for the position, I'll split my wor
 This process would normally take place over the course of several `Sprint Planning` sessions. Since the exercise is quite concise and I am working alone, I'll already shape the whole agenda in this section. I'll try to split the sprints in a logical way. Here is the general planning for the next sprints:
 
 - Sprint 1: `Test Plan`, `Testing Project Setup` and `Boiler Plate Project Release`
-- Sprint 2: `Auth` & `Booking` endpoints testing
+- Sprint 2: `Booking` endpoints testing
 - Sprint 3: `Messages`endpoint testing
 - Sprint 4: `CI/CD Pipeline Integration` and `Reporting`
 
@@ -98,27 +98,18 @@ Testing the UI of the website including:
 
 We will perform the following types of testing:
 
-- `Functional Testing`: to ensure that the API business logic is well observerd (e.g., all required fields are present, the API returns the correct status code, ...)
-- `Integration Testing`: to ensure that the API is well integrated with the whole system database (writes) and other operations from the same endpoint (deleting a room that does not exist should return a 404, possibility to retrieve a booking that was booked beforehand, ...)
-- `Boundary Testing`: to ensure that the API can handle the maximum and minimum values for each parameter
-- `Negative Testing`: to ensure that the API can handle incorrect data types, missing parameters, and incorrect parameter locations
-
-`Performance Testing` is out of the scope of this exercise.
+- `Functional Testing`: check the chaining of operations to ensure that the API business logic is well observerd (e.g., all required fields are present, the API returns the correct status code, ...)
+- `Non-Functional Testing`: we will test the request & response objects to ensure that the API can handle all types of data (e.g., boundary values, incorrect data types, ...)
+- `Performance Testing` is out of the scope of this exercise.
 
 #### 1.4.2 Test Scenarios Definitions
 
-All test scenarios will be described using the Gherkin language. Each of the two endpoints will be covered by three separate features files. Here is an example for the `Booking` endpoint:
+All test scenarios will be described using the Gherkin language. Each of the two endpoints will be covered by 2 separate features files:
 
-| Feature File                      | Features                     | Description                                                                            |
-| --------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| BookingUnitTesting.feature        | Positive                     | Testing the Booking operations in isolation with valid data                            |
-|                                   | Negative                     | Testing the Booking operations in isolation with invalid/missing data                  |
-| BookingIntegrationTesting.feature | Positive                     | Testing the Booking operations in integration with valid data                          |
-|                                   | Negative                     | Testing the Booking operations in integration with invalid/missing data                |
-| BookingDataTesting.feature        | Boundary values              | Testing all parameters with boundary values                                            |
-|                                   | Incorrect type               | Testing all parameters with incorrect data types                                       |
-|                                   | Incomplete parameter list    | Testing all parameters with missing values                                             |
-|                                   | Incorrect parameter location | Testing the API with parameters passed in the wrong section (header, body, query, ...) |
+- `Booking.FunctionalTesting.feature`
+- `Booking.NonFunctionalTesting.feature`
+- `Message.FunctionalTesting.feature`
+- `Message.NonFunctionalTesting.feature`
 
 ### 1.5 Test Coverage
 
@@ -427,7 +418,7 @@ Here is the list of the operations available for the different endpoints:
 
 <img src="docs/postman-project.png" alt="postman project" width="300">
 
-As you can see, there is another endpoint called `/auth/login` that is not documented in the OpenAPI documentation. I found it after realizing that most of the `Booking` operations require authentication. After playing a bit with the Web Application, I realized that there was an admin panel:
+As you can see, there are 2 other endpoints called `/auth/` & `/room` that were not documented in the exercise. I found the first after realizing that most of the `Booking` operations require authentication. After playing a bit with the Web Application, I realized that there was an admin panel:
 
 <img src="docs/admin-login-screen.png" alt="admin login screen" width="400">
 
@@ -439,13 +430,16 @@ As annouced in the OpenAPI documentation for the `Booking` endpoint, we need a t
 
 <img src="docs/session-token.png" alt="login request interception" width="600">
 
-### 1.2 The Hidden Endpoint: Auth
+As we will see in section [4.6 Non Reproducible Test Executions: The 'Room' Endpoint](#46-non-reproducible-test-executions-the-room-endpoint), I will also need to use the `Room` endpoint to create a room before testing the `Booking` endpoint for test execution reproducibility as the web app is a shared environment.
 
-By looking at the other 2 endpoints URLs, I was able to determine that the `Auth` endpoint OpenAPI documentation is located at `https://automationintesting.online/auth/swagger-ui/index.html`.
+### 1.2 The Hidden Endpoints Swaggers
 
-### 1.3 The Other Hidden Endpoint: Room
+By looking at the other 2 endpoints URLs, I was able to determine that:
 
-I also found another endpoint called `Room` that is not documented in the OpenAPI documentation. It is located at `https://automationintesting.online/room/swagger-ui/index.html`. Since this is not required for the exercise, I will not test it nor refer to it from now on. If it pops up during the testing, I will at least be aware of its existence.
+- the `Auth` endpoint OpenAPI documentation is located at `https://automationintesting.online/auth/swagger-ui/index.html`.
+- the `Room` endpoint OpenAPI documentation is located at `https://automationintesting.online/room/swagger-ui/index.html`.
+
+Since for the exercise to cover them with test cases, I will not test them thoroughly but only define some `Background Steps` to authenticate the user and create a room before testing the `Booking` endpoint, as well as an `After All` hooks to delete the room at the end of the test execution.
 
 ## 2. OpenAPI Documentation
 
@@ -453,81 +447,310 @@ Let's summarize the information from the OpenAPI documentation for the `Auth` an
 
 ### 2.1 Auth Endpoint
 
-This table summarizes the information from the OpenAPI documentation for the Auth endpoint:
+This table summarizes the information from the OpenAPI documentation for the Auth endpoint (at least the 1 operation we will be using):
 
-| Operation     | Path           | Method | Auth Required? | Parameters                         | Returns / Action                         | Description            |
-| ------------- | -------------- | ------ | -------------- | ---------------------------------- | ---------------------------------------- | ---------------------- |
-| createToken   | /auth/login    | POST   | Not Required   | username, password in body as json | Returns a `Token` object inside a cookie | Authenticates the user |
-| deleteToken   | /auth/logout   | POST   | Required       | token in body as json & header     | Deletes the `Token` from the cookies     | Logs out the user      |
-| validateToken | /auth/validate | POST   | Required       | token in body as json & header     | ??? haven't checked yet its usage        | Validates the token    |
+| Operation   | Path        | Method | Auth Required? | Parameters                    | Returns                                  | Success Status Code | Description            |
+| ----------- | ----------- | ------ | -------------- | ----------------------------- | ---------------------------------------- | ------------------- | ---------------------- |
+| createToken | /auth/login | POST   | Not Required   | `Auth` object in body as json | Returns a `Token` object inside a cookie | 200 (OK)            | Authenticates the user |
 
-For quick reference, here is the `Token` object schema:
+For quick reference, here is the `Token` and `Auth` object schemas:
 
 ```json
 "Token": { "type": "object", "properties": { "token": { "type": "string" } } }
+
+"Auth": {
+  "type": "object",
+  "properties": { "username": { "type": "string" }, "password": { "type": "string" } }
+}
 ```
 
-We will only be testing the `createToken` operation as it is the only one needed for the `Booking` and `Messages` operations.
+### 2.2 Room Endpoint
 
-### 2.2 Booking Endpoint
+This table summarizes the information from the OpenAPI documentation for the Room endpoint (at least the 2 operations we will be using):
 
-This table summarizes the information from the OpenAPI documentation for the Booking endpoint:
+| Operation  | Path  | Method | Auth Required? | Parameters                                | Returns                        | Success Status Code | Description        |
+| ---------- | ----- | ------ | -------------- | ----------------------------------------- | ------------------------------ | ------------------- | ------------------ |
+| createRoom | /room | POST   | Required       | `Room` object in body as json             | `Room` object in response body | 201 (Created)       | Creates a new room |
+| deleteRoom | /room | DELETE | Required       | room `id` in path & auth `Token`in cookie | 204 status code                | 202 (Accepted)      | Deletes a room     |
 
-| Operation  | Path          | Method | Auth Required? | Parameters | Returns                 | Description |
-| ---------- | ------------- | ------ | -------------- | ---------- | ----------------------- | ----------- |
-| getBooking | /booking/{id} | GET    | Required       |            | Get a booking by its ID | Returns     |
+Please note that in the OpenAPI documentation, these 2 operations are documented to report a 200 status code. However, in practice, the `createRoom` operation returns a 201 status code and the `deleteRoom` operation returns a 202 status code. These differences will be reported in section.
+
+For quick reference, here is the `Room` object schema:
+
+```json
+"Room": {
+  "required": ["roomName", "type"],
+  "type": "object",
+  "properties": {
+    "roomid": { "type": "integer", "format": "int32" },
+    "roomName": { "type": "string" },
+    "type": { "pattern": "Single|Double|Twin|Family|Suite", "type": "string" },
+    "accessible": { "type": "boolean" },
+    "image": { "type": "string" },
+    "description": { "type": "string" },
+    "features": { "type": "array", "items": { "type": "string" } },
+    "roomPrice": { "maximum": 999, "minimum": 1, "type": "integer", "format": "int32" }
+  }
+}
+```
+
+### 2.3 Booking Endpoint
+
+This table summarizes the information from the OpenAPI documentation for the Booking endpoint path `/{$id}`:
+
+| Operation     | Path          | Method | Auth Required? | Parameters                                                            | Returns                  | Description                               |
+| ------------- | ------------- | ------ | -------------- | --------------------------------------------------------------------- | ------------------------ | ----------------------------------------- |
+| getBooking    | /booking/{id} | GET    | Required       | room `id` in path & auth `Token` in cookie                            | `Booking` object in body | Get information for a given booking by id |
+| updateBooking | /booking/{id} | PUT    | Required       | room `id` in path & `Booking` object in body & auth `Token` in cookie |                          | Updates a booking                         |
+| deleteBooking | /booking/{id} | DELETE | Required       | room `id` in path & auth `Token` in cookie                            |                          | Deletes a booking                         |
+
+This table summarizes the information from the OpenAPI documentation for the Booking endpoint path `/`:
+
+| Operation     | Path      | Method | Auth Required? | Parameters                                | Returns                   | Success Status Code | Description                       |
+| ------------- | --------- | ------ | -------------- | ----------------------------------------- | ------------------------- | ------------------- | --------------------------------- |
+| createBooking | /booking/ | POST   | Not Required   | `Booking` in body                         | `Booking` in body         | 201 (Created)       | Create a booking for a room       |
+| getBookings   | /booking/ | GET    | Required       | `roomid` in path & auth `Token` in cookie | List of `Booking` objects | 200 (OK)            | Get all bookings dates for a room |
+
+This table summarizes the information from the OpenAPI documentation for the Booking endpoint path `/summary`:
+
+| Operation    | Path      | Method | Auth Required? | Parameters       | Returns                                | Description                                         |
+| ------------ | --------- | ------ | -------------- | ---------------- | -------------------------------------- | --------------------------------------------------- |
+| getSummaries | /booking/ | GET    | Not Required   | `roomid`in query | array of `BookingDates`objects in body | Get summaries of all booking dates for a given room |
+
+For quick reference, here is the `Booking`, `BookingDates` & `CreatedBooking` object schemas:
+
+```json
+"Booking": {
+  "required": ["depositpaid", "email", "firstname", "lastname", "phone"],
+  "type": "object",
+  "properties": {
+    "bookingid": { "type": "integer", "format": "int32" },
+    "roomid": { "minimum": 1, "type": "integer", "format": "int32" },
+    "firstname": { "maxLength": 18, "minLength": 3, "type": "string" },
+    "lastname": { "maxLength": 30, "minLength": 3, "type": "string" },
+    "depositpaid": { "type": "boolean" },
+    "email": { "type": "string" },
+    "phone": { "maxLength": 21, "minLength": 11, "type": "string" },
+    "bookingdates": { "$ref": "#/components/schemas/BookingDates" }
+  }
+}
+
+"BookingDates": {
+  "required": ["checkin", "checkout"],
+  "type": "object",
+  "properties": {
+    "checkin": { "type": "string", "format": "date" },
+    "checkout": { "type": "string", "format": "date" }
+  }
+}
+
+"CreatedBooking": {
+  "type": "object",
+  "properties": {
+    "bookingid": { "type": "integer", "format": "int32" },
+    "booking": { "$ref": "#/components/schemas/Booking" }
+  }
+}
+```
+
+Please note that all above operations apart `getSummaries` return a `403 (Forbidden)` status if the caller is not authenticated by a valid token in cookies. This is perfectly fine since the `getSummaries` operation only reports the booked dates for all rooms and does not expose any client data. Here is an example response:
+
+```json
+{
+  "bookings": [
+    {
+      "bookingDates": {
+        "checkin": "2025-02-06",
+        "checkout": "2025-02-07"
+      }
+    }
+  ]
+}
+```
 
 ## 3. Test Scenarios
 
+In this section, we will define the scenarios that we are going to run for each endpoint. As explained, the `Auth` & `Room` are out of scope for this project but we will define a few `Background Steps` to authenticate the user and create a room before testing the `Booking` endpoint.
+
+**Functional Testing:**
+
+- We will check the chaining of the operations with regards of the business logic both with positive and negative test scenarios (e.g., `createBooking` after `createRoom`)
+- All operations that require authentication should return a `403 (Forbidden)` status code if the caller is not authenticated
+
+**Non-Functional Testing:**
+
+We will test the `request` & `response` objects:
+
+- We will check all the operations with valid data (Positive Testing)
+- We will check all the operations with missing/incomplete & non-existing data (not in DB: delete a non-existing room, ...) (Negative Testing)
+- We will check all the operations with the wrong method (e.g., `GET` instead of `POST`) (Negative Testing)
+- We will check all the operations request fields with out of valid range & wrong type data (int for string, 'yes' for boolean, ...) (Boundary Testing)
+  (Integration Testing / Functional Testing)
+
+  Please note that all positive scenarios are done in integration with the operation `createBooking` as the test data should be present. **If I add access to the DB in testing environment, I could inject the required data and `test these operations in isolation`.**
+
 ### 3.1 Auth Endpoint
 
-Here are the test scenarios for the `login` operation:
+Here are the test scenarios for the `login`. Since this endpoint is out of scope, it will be covered by a single feature file named `Auth.feature`:
 
-| Feature File | Scenario | Description                                              | Expected Result                                      |
-| ------------ | -------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| Auth.feature | Positive | Authenticate with valid credentials                      | 200 status code + cookie containing a session token  |
-|              | Negative | Authenticate with invalid credentials                    | 403 status code (Forbidden)                          |
-|              |          | Authenticate with valid credentials and incorrect method | 405 status code + error message "Method Not Allowed" |
-|              |          | Authenticate without credentials                         | 415 status code (Unsupported Media Type)             |
+| #Scenario | Type     | Description                                              | Expected Result                                      |
+| --------- | -------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| S.001     | Positive | Authenticate with valid credentials                      | 200 status code + cookie containing a session token  |
+| S.002     | Negative | Authenticate with invalid credentials                    | 403 status code (Forbidden)                          |
+| S.003     |          | Authenticate with valid credentials and incorrect method | 405 status code + error message "Method Not Allowed" |
+| S.004     |          | Authenticate without credentials                         | 415 status code (Unsupported Media Type)             |
 
 ### 3.2 Booking Endpoint
 
-#### 3.2.1 /\{id\} Path
+#### 3.2.1 Functional Testing
 
-Here are the test scenarios for the `getBooking` operation:
+All these scenarios will be covered by the `Booking.FunctionalTesting.feature` feature file. The list of available test scenarios can be deduced by this diagram:
 
-| Feature File | Scenario | Description | Expected Result |
-| ------------ | -------- | ----------- | --------------- |
+```mermaid
+graph TD
+    A[Given Authenticated?]
+    A -->|Yes| B[Given Room]
+    A -->|No| C[Given Room]
+    B -->|0| D[Given Booking]
+    B -->|1| E[Given Booking]
+    B -->|>1| F[Given Booking]
+    C -->|0| G[Given Booking]
+    C -->|1| H[Given Booking]
+    C -->|>1| I[Given Booking]
+    D -->|0| J[Given CRUD Operations]
+    D -->|1| J
+    D -->|>1| J
+    E -->|0| J
+    E -->|1| J
+    E -->|>1| J
+    F -->|0| J
+    F -->|>1| J
+    F -->|1| J
+    G -->|0| J
+    G -->|1| J
+    G -->|>1| J
+    H -->|0| J
+    H -->|1| J
+    H -->|>1| J
+    I -->|0| J
+    I -->|1| J
+    I -->|>1| J
+    J --> K[When CRUD Operations]
+    K --> L[Then Expected Result]
+    L-->K
+
+    classDef Given fill:#d3d3d3,stroke:#000,stroke-width:2px,color:#000;
+    classDef When fill:#90ee90,stroke:#000,stroke-width:2px,color:#000;
+    classDef Then fill:#f08080,stroke:#000,stroke-width:2px,color:#000;
+
+    class A Given;
+    class B Given;
+    class C Given;
+    class D Given;
+    class E Given;
+    class F Given;
+    class G Given;
+    class H Given;
+    class I Given;
+    class J Given;
+    class K When;
+    class L Then;
+```
+
+This diagram should be understood as follows:
+
+- All that happens before the first `Given CRUD Operations` are preconditions located in the `Given` steps of the scenarios
+- The `When CRUD Operations` is the operation that will be tested
+- The `Then Expected Result]` is the expected result of the operation
+- After setup, multiple scenarios can be tested in the same test case by chaining `When CRUD Operations` and `Then Expected Result]`
+
+**Positive Scenarios**
+
+| #Scenario | Authenticated? | #Room | #Booking | When CRUD                                    | Then Expected Result                                                         | Defects |
+| --------- | -------------- | ----- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------- | ------- |
+| FP.001    | Yes            | 1     | 0        | When I Create a booking                      | Then I should see a booking with the retrieve id (GET /id)                   | -       |
+|           |                |       |          |                                              | Then I should see the room booking for these dates in summary (GET /summary) |         |
+| FP.004    | Yes            | 1     | 1        | Create a booking for a different room & date | 201 (Created) + booking object in response                                   | -       |
+
+**Negative Scenarios**
+
+| #Scenario | Authenticated? | #Room | #Booking | Description                                                                             | Expected Result                               | Defects |
+| --------- | -------------- | ----- | -------- | --------------------------------------------------------------------------------------- | --------------------------------------------- | ------- |
+| FP.001    | No             | 0     | 0        | Create a booking while not authenticated and room not available (closed for renovation) | Should not be allowed since not authenticated | -       |
+| FN.001    | Yes            | 0     | 0        | Create a booking but room not available (closed for renovation)                         | Should not be allowed since no room created   | -       |
+| FN.002    | Yes            | 1     | 1        | Create a booking but for a room already booked on that particular date                  | 409 (Conflict)                                | -       |
+| FN.003    | Yes            | 1     | 1        | Create a booking but for a room already booked on that period (long stay)               | 409 (Conflict)                                | -       |
+| FN.003    | Yes            | 1     | 0        | Update a non-existing booking                                                           | 404 (Not found)                               | -       |
+| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to see it                                                 | 404 (Not found)                               | -       |
+| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to update it                                              | 404 (Not found)                               | -       |
+| FN.003    | Yes            | 1     | 1        | Delete a booking and then try to delete it again                                        | 404 (Not found)                               | -       |
+
+#### 3.2.2 Non-Functional Testing
+
+All these scenarios will be covered by the `Booking.NonFunctionalTesting.feature` feature file.
+
+**Path `/\{id\}**
+
+Here are the test scenarios for the `getBooking` operation :
+
+| #Scenario | Type     | Description                             | Expected Result                                                                           | Defects                     |
+| --------- | -------- | --------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------- |
+| F.001     | Positive | (auth) Get an existing booking          | 200 (OK) + booking object in the response body                                            | -                           |
+| F.002     | Negative | (no auth)Get an existing booking        | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
+| F.003     |          | (no auth)Get a non-existing booking     | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
+| F.004     |          | (auth) Get a non-existing booking       | 404 (Not Found) + error message "Not Found"                                               | -                           |
+| F.005     |          | (auth) No booking id in path            | Equivalent to operation `getBookings`                                                     | -                           |
+| F.006     | Boundary | (auth) Get a booking with id 0          | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
+| F.007     |          | (auth) Get a booking with id -1         | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
+| F.008     |          | (auth) Get a booking with id abc        | 400 (Bad Request) + error message "bookingid wrong data type: got string should be int32" | got 404 (Not found) instead |
+| F.009     |          | (auth) Get a booking with id 1000000000 | 400 (Bad Request) + error message "bookingid out of range"                                | got 400 (Bad Request)       |
 
 Here are the test scenarios for the `updateBooking` operation:
 
-| Feature File | Scenario | Description | Expected Result |
-| ------------ | -------- | ----------- | --------------- |
+| #Scenario | Type     | Description                                          | Expected Result                                 | Defects                                                                                      |
+| --------- | -------- | ---------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| F.101     | Positive | (auth) Update an exiting booking with valid data     | 200 status code + booking changed with new data | -                                                                                            |
+| F.102     |          |                                                      |                                                 | Roomid cannot be changed but is mandatory (either not mandatory or should allow room change) |
+| F.103     | Negative | (no auth) Update an existing booking with valid data | 403 status code (Forbidden)                     | -                                                                                            |
+| F.104     |          | (auth) Update an existing booking with invalid data  | 400 status code (Bad Request)                   | -                                                                                            |
 
 Here are the test scenarios for the `deleteBooking` operation:
 
-| Feature File | Scenario | Description | Expected Result |
-| ------------ | -------- | ----------- | --------------- |
+| #Scenario | Type     | Description                          | Expected Result | Defects |
+| --------- | -------- | ------------------------------------ | --------------- | ------- |
+| F.201     | Positive | (auth) Delete an existing booking    | 202 (Accepted)  | -       |
+| F.202     | Negative | (no auth) Delete an existing booking | 403 (Forbidden) | -       |
+| F.203     |          | (auth) Delete a non-existing booking | 404 (Not Found) | -       |
 
-#### 3.2.2 / Path
+**Path `/`**
 
 Here are the test scenarios for the `createBooking` operation:
 
-| Feature File    | Scenario | Description                                      | Expected Result                                       |
-| --------------- | -------- | ------------------------------------------------ | ----------------------------------------------------- |
-| Booking.feature | Positive | Create a booking with valid data in body in json | 201 status code + booking object in the response body |
+| #Scenario | Type     | Description                                                                         | Expected Result                                                                 | Defects                          |
+| --------- | -------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| F.301     | Positive | (auth) Create a booking with valid data                                             | 201 status code + `Booking` object in the response body                         | No mention of the deposit amount |
+| F.302     |          | (no auth) Create a booking with valid data                                          | 403 (Forbidden) + error message "Forbidden"                                     | -                                |
+| F.303     | Negative | (auth) Create a booking for a room already booked for that single date              | 409 (Conflict)                                                                  | -                                |
+| F.304     |          | (auth) Create a booking for a room already booked for that period                   | 409 (Conflict)                                                                  | -                                |
+| F.305     |          | (auth) Create a booking with invalid data                                           | 400 (Bad Request) + error message "Bad Request"                                 | -                                |
+| F.306     |          | (auth) Create a booking for a room already booked for that period with invalid data | 400 (Bad Request) + error message "Bad Request" (400 takes precedence over 409) | -                                |
 
 Here are the test scenarios for the `getBookings` operation:
 
-| Feature File | Scenario | Description | Expected Result |
-| ------------ | -------- | ----------- | --------------- |
+| #Scenario | Type     | Description                                     | Expected Result                                                  | Defects                 |
+| --------- | -------- | ----------------------------------------------- | ---------------------------------------------------------------- | ----------------------- |
+| F.401     | Positive | (auth) Get all bookings for an existing room    | 200 status code + list of `Booking` objects in the response body | -                       |
+| F.402     | Negative | (no auth) Get all bookings for an existing room | 403 (Forbidden) + error message "Forbidden"                      | -                       |
+| F.403     |          | (auth) Get all bookings for a non-existing room | 404 (Not Found) + error message "Not Found"                      | got 200 with empty list |
 
-#### 3.2.3 /summary Path
+**Path `/summary`**
 
 Here are the test scenarios for the `getSummaries` operation:
 
-| Feature File | Scenario | Description | Expected Result |
-| ------------ | -------- | ----------- | --------------- |
+| #Scenario | Type     | Description                                                       | Expected Result                                                       | Defects |
+| --------- | -------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- | ------- |
+| F.501     | Positive | Get summaries of all bookings for a room that has been booked     | 200 status code + list of `BookingDates` objects in the response body | -       |
+|           | Negative | Get summaries of all bookings for a room that has not been booked | 200 status code + empty list                                          | -       |
 
 ## 4. Implementation
 
@@ -859,18 +1082,19 @@ public static String generateRandomImage() {
 }
 ```
 
-## 5. General Remarks about the OpenAPI Documentation
+## 5. OpenAPI Documentation Defects
 
-When it comes to the Swagger documentation, I don't know what was the intent of the Dev Team. Are they willing to give all possible informations about the API or just enough for `ìnformed users`? Therefore, I won't classify my findings as `defects`. I'll rather name them `Request For Change` and let the Dev Team investigate these points and if necessary convert them to `Defects` or `User Stories`.
+When it comes to the Swagger documentation, I don't know what was the intent of the Dev Team. Are they willing to obfuscate the API usage to avoid reverse engineering or do they want to give all simply document the API? Knowing more about the context could help me decide wether to report my findings as `defects` or `request for change`.
 
-This being said, I would do the following recommendations to the Dev Team regarding the OpenAPI documentation:
+This being said, for the sake of simplicity, I will report the following `defects`:
 
-| RFC ID  | Description                                                                                                                                   |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| RFC 001 | All three swagger files have a generic title: `API Documentation`. I would advice to have a more specific title for each endpoint             |
-| RFC 002 | All operations give an example response only for the `200` status code. I would be nice to have examples for other status codes as well       |
-| RFC 003 | In all operations that require authentication, the cookie is listed as `not required`. This is misleading. I would advice to make it required |
-| RFC 004 | The `createToken` operation does not specify that it will set a token in a cookie. I would advice to add this information in the description  |
+| RFC ID     | Description                                                                                                                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEFECT.001 | All three swagger files have a generic title: `API Documentation`. I would advice to have a more specific title for each endpoint                                                                                    |
+| DEFECT.002 | All operations give an example response with a `200` status code. They are not specific enough/incorrect as some might return a different status code in case of succes: 201 for createRoom, 202 for deleteRoom, ... |
+| DEFECT.003 | In all operations that require authentication, the cookie is listed as `not required`. This is misleading. I would advice to make it required                                                                        |
+| DEFECT.004 | The `createToken` operation does not specify that it will set a token in a cookie. I would advice to add this information in the description                                                                         |
+| DEFECT.005 | The `getBookings` operation does not specify that it will return a list of bookings but only a string. I would advice to add this information in the description                                                     |
 
 ## 6. Deliverables
 

@@ -682,32 +682,31 @@ Here are the test scenarios for the `getBooking` operation :
 
 | #Scenario | Type     | Description                             | Expected Result                                                                           | Defects                     |
 | --------- | -------- | --------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------- |
-| F.001     | Positive | (auth) Get an existing booking          | 200 (OK) + booking object in the response body                                            | -                           |
-| F.002     | Negative | (no auth)Get an existing booking        | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
-| F.003     |          | (no auth)Get a non-existing booking     | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
-| F.004     |          | (auth) Get a non-existing booking       | 404 (Not Found) + error message "Not Found"                                               | -                           |
-| F.005     |          | (auth) No booking id in path            | Equivalent to operation `getBookings`                                                     | -                           |
-| F.006     | Boundary | (auth) Get a booking with id 0          | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
-| F.007     |          | (auth) Get a booking with id -1         | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
-| F.008     |          | (auth) Get a booking with id abc        | 400 (Bad Request) + error message "bookingid wrong data type: got string should be int32" | got 404 (Not found) instead |
-| F.009     |          | (auth) Get a booking with id 1000000000 | 400 (Bad Request) + error message "bookingid out of range"                                | got 400 (Bad Request)       |
+| NF.001    | Positive | (auth) Get an existing booking          | 200 (OK) + booking object in the response body                                            | -                           |
+| NF.002    | Negative | (no auth)Get an existing booking        | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
+| NF.003    |          | (no auth)Get a non-existing booking     | 403 (Forbidden) + error message "Forbidden"                                               | -                           |
+| NF.004    |          | (auth) Get a non-existing booking       | 404 (Not Found) + error message "Not Found"                                               | -                           |
+| NF.005    |          | (auth) No booking id in path            | Equivalent to operation `getBookings`                                                     | -                           |
+| NF.006    | Boundary | (auth) Get a booking with id 0          | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
+| NF.007    |          | (auth) Get a booking with id -1         | 400 (Bad Request) + error message "bookingid out of range"                                | got 404 (Not found) instead |
+| NF.008    |          | (auth) Get a booking with id abc        | 400 (Bad Request) + error message "bookingid wrong data type: got string should be int32" | got 404 (Not found) instead |
+| NF.009    |          | (auth) Get a booking with id 1000000000 | 400 (Bad Request) + error message "bookingid out of range"                                | got 400 (Bad Request)       |
 
 Here are the test scenarios for the `updateBooking` operation:
 
 | #Scenario | Type     | Description                                          | Expected Result                                 | Defects                                                                                      |
 | --------- | -------- | ---------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| F.101     | Positive | (auth) Update an exiting booking with valid data     | 200 status code + booking changed with new data | -                                                                                            |
-| F.102     |          |                                                      |                                                 | Roomid cannot be changed but is mandatory (either not mandatory or should allow room change) |
-| F.103     | Negative | (no auth) Update an existing booking with valid data | 403 status code (Forbidden)                     | -                                                                                            |
-| F.104     |          | (auth) Update an existing booking with invalid data  | 400 status code (Bad Request)                   | -                                                                                            |
+| NF.101    | Positive | (auth) Update an exiting booking with valid data     | 200 status code + booking changed with new data | Roomid cannot be changed but is mandatory (either not mandatory or should allow room change) |
+| NF.102    | Negative | (no auth) Update an existing booking with valid data | 403 status code (Forbidden)                     | -                                                                                            |
+| NF.103    |          | (auth) Update an existing booking with invalid data  | 400 status code (Bad Request)                   | -                                                                                            |
 
 Here are the test scenarios for the `deleteBooking` operation:
 
 | #Scenario | Type     | Description                          | Expected Result | Defects |
 | --------- | -------- | ------------------------------------ | --------------- | ------- |
-| F.201     | Positive | (auth) Delete an existing booking    | 202 (Accepted)  | -       |
-| F.202     | Negative | (no auth) Delete an existing booking | 403 (Forbidden) | -       |
-| F.203     |          | (auth) Delete a non-existing booking | 404 (Not Found) | -       |
+| NF.201    | Positive | (auth) Delete an existing booking    | 202 (Accepted)  | -       |
+| NF.202    | Negative | (no auth) Delete an existing booking | 403 (Forbidden) | -       |
+| NF.203    |          | (auth) Delete a non-existing booking | 404 (Not Found) | -       |
 
 **Path `/`**
 
@@ -715,20 +714,20 @@ Here are the test scenarios for the `createBooking` operation:
 
 | #Scenario | Type     | Description                                                                         | Expected Result                                                                 | Defects                          |
 | --------- | -------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
-| F.301     | Positive | (auth) Create a booking with valid data                                             | 201 status code + `Booking` object in the response body                         | No mention of the deposit amount |
-| F.302     |          | (no auth) Create a booking with valid data                                          | 403 (Forbidden) + error message "Forbidden"                                     | -                                |
-| F.303     | Negative | (auth) Create a booking for a room already booked for that single date              | 409 (Conflict)                                                                  | -                                |
-| F.304     |          | (auth) Create a booking for a room already booked for that period                   | 409 (Conflict)                                                                  | -                                |
-| F.305     |          | (auth) Create a booking with invalid data                                           | 400 (Bad Request) + error message "Bad Request"                                 | -                                |
-| F.306     |          | (auth) Create a booking for a room already booked for that period with invalid data | 400 (Bad Request) + error message "Bad Request" (400 takes precedence over 409) | -                                |
+| NF.301    | Positive | (auth) Create a booking with valid data                                             | 201 status code + `Booking` object in the response body                         | No mention of the deposit amount |
+| NF.302    |          | (no auth) Create a booking with valid data                                          | 403 (Forbidden) + error message "Forbidden"                                     | -                                |
+| NF.303    | Negative | (auth) Create a booking for a room already booked for that single date              | 409 (Conflict)                                                                  | -                                |
+| NF.304    |          | (auth) Create a booking for a room already booked for that period                   | 409 (Conflict)                                                                  | -                                |
+| NF.305    |          | (auth) Create a booking with invalid data                                           | 400 (Bad Request) + error message "Bad Request"                                 | -                                |
+| NF.306    |          | (auth) Create a booking for a room already booked for that period with invalid data | 400 (Bad Request) + error message "Bad Request" (400 takes precedence over 409) | -                                |
 
 Here are the test scenarios for the `getBookings` operation:
 
 | #Scenario | Type     | Description                                     | Expected Result                                                  | Defects                 |
 | --------- | -------- | ----------------------------------------------- | ---------------------------------------------------------------- | ----------------------- |
-| F.401     | Positive | (auth) Get all bookings for an existing room    | 200 status code + list of `Booking` objects in the response body | -                       |
-| F.402     | Negative | (no auth) Get all bookings for an existing room | 403 (Forbidden) + error message "Forbidden"                      | -                       |
-| F.403     |          | (auth) Get all bookings for a non-existing room | 404 (Not Found) + error message "Not Found"                      | got 200 with empty list |
+| NF.401    | Positive | (auth) Get all bookings for an existing room    | 200 status code + list of `Booking` objects in the response body | -                       |
+| NF.402    | Negative | (no auth) Get all bookings for an existing room | 403 (Forbidden) + error message "Forbidden"                      | -                       |
+| NF.403    |          | (auth) Get all bookings for a non-existing room | 404 (Not Found) + error message "Not Found"                      | got 200 with empty list |
 
 **Path `/summary`**
 
@@ -736,8 +735,8 @@ Here are the test scenarios for the `getSummaries` operation:
 
 | #Scenario | Type     | Description                                                       | Expected Result                                                       | Defects |
 | --------- | -------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- | ------- |
-| F.501     | Positive | Get summaries of all bookings for a room that has been booked     | 200 status code + list of `BookingDates` objects in the response body | -       |
-|           | Negative | Get summaries of all bookings for a room that has not been booked | 200 status code + empty list                                          | -       |
+| NF.501    | Positive | Get summaries of all bookings for a room that has been booked     | 200 status code + list of `BookingDates` objects in the response body | -       |
+| NF.502    | Negative | Get summaries of all bookings for a room that has not been booked | 200 status code + empty list                                          | -       |
 
 ## 4. Implementation
 

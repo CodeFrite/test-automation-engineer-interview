@@ -1101,6 +1101,7 @@ This being said, for the sake of simplicity, I will report the following `defect
 | DEFECT.003 | In all operations that require authentication, the cookie is listed as `not required`. This is misleading. I would advice to make it required                                                                        |
 | DEFECT.004 | The `createToken` operation does not specify that it will set a token in a cookie. I would advice to add this information in the description                                                                         |
 | DEFECT.005 | The `getBookings` operation does not specify that it will return a list of bookings but only a string. I would advice to add this information in the description                                                     |
+| DEFECT.006 | The `getBooking` & `getBookings` operations do not return the `email` nor the `phone` of the booking. I would advice to add these fields in the response body of at least one of these 2 operations                  |
 
 ## 6. Deliverables
 

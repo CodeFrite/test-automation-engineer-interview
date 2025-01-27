@@ -16,7 +16,9 @@ Feature: Non-Functional Testing of the `Booking` endpoint
 
 
   #Scenario: NF.002: (no auth) Get an existing booking and observe 403 (Forbidden) + error message "Forbidden"
-  #Scenario: NF.003: (no auth) Get a non-existing booking and observe 403 (Forbidden) + error message "Forbidden"
+  Scenario: NF.003: (no auth) Get a non-existing booking and observe 403 (Forbidden) + error message "Forbidden"
+    Given I send a "GET" request to "/1"
+     Then the response should have a status code 403
   
   Scenario: NF.004: (auth) Get a non-existing booking and observe 404 (Not Found) + error message "Not Found"
     Given I am authenticated

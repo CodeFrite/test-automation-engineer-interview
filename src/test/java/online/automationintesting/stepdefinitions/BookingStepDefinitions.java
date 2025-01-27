@@ -26,6 +26,8 @@ public class BookingStepDefinitions {
     this.testContext = testContext;
   }
 
+  // WHEN VERBS
+
   @When("I book room {string} between the dates {string} and {string} with my info as booking {string}:")
   public void i_book_room_between_the_dates_and_with_my_info(String roomStoreId, String fromDate, String toDate, String bookingStoreId, io.cucumber.datatable.DataTable bookingDataTable) throws Exception{
     // Get the roomid from the test context store
@@ -109,7 +111,7 @@ public class BookingStepDefinitions {
       .build();
 
       // call the updateBooking endpoint to update the booking
-      Response response = given().log().all().spec(requestSpecification).when().log().all().put();
+      Response response = given().spec(requestSpecification).when().put();
 
       // check status code
       response.then().statusCode(200);
@@ -170,6 +172,8 @@ public class BookingStepDefinitions {
     Assert.assertEquals(booking.getBookingId(), retrievedBooking.getBookingId());
   }
 
+  // THEN VERBS
+  
   @Then("I should see the following information for the booking {string}")
   public void i_should_see_the_following_information_for_the_booking(String bookingStoreId, io.cucumber.datatable.DataTable bookingDataTable) {
     // Retrieve the stored booking information from the test context store
@@ -243,7 +247,6 @@ public class BookingStepDefinitions {
   public void i_should_not_be_able_to_find_in_the_summary_the_booking(String bookingStoreId) {
     // Retrieve a stored booking information from the test context store
     Booking booking = (Booking) this.testContext.getValue(bookingStoreId);
-    System.out.println(">>> ROOM ID :" + booking.getRoomId());
 
     // Instantiate a new RequestSpecBuilder object to not pollute the Test Context
     RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
@@ -265,12 +268,6 @@ public class BookingStepDefinitions {
 
     // get the summary information for the room where the booking was made
     Bookings bookings = validatableResponse.extract().as(Bookings.class);
-
-    for (Bookings.BookingItem bookingItem : bookings.getBookings()) {
-        BookingDates bookingDates = bookingItem.getBookingDates();
-        System.out.println("Checkin: " + bookingDates.getCheckin());
-        System.out.println("Checkout: " + bookingDates.getCheckout());
-    }
 
     // check that the retrieved summary information contains the booking dates from our booking
     Assert.assertFalse(bookings.containsBookingDates(booking.getBookingDates()));

@@ -17,12 +17,38 @@ Feature: Non-Functional Testing of the `Booking` endpoint
 
   #Scenario: NF.002: (no auth) Get an existing booking and observe 403 (Forbidden) + error message "Forbidden"
   #Scenario: NF.003: (no auth) Get a non-existing booking and observe 403 (Forbidden) + error message "Forbidden"
-  #Scenario: NF.004: (auth) Get a non-existing booking and observe 404 (Not Found) + error message "Not Found"
+  
+  Scenario: NF.004: (auth) Get a non-existing booking and observe 404 (Not Found) + error message "Not Found"
+    Given I am authenticated
+      And I add a cookie to the header with key "token"
+     When I send a "GET" request to "/123456789"
+     Then the response should have a status code 404
+
   #Scenario: NF.005: (auth) No booking id in path and observe equivalent to operation `getBookings`
-  #Scenario: NF.006: (auth) Get a booking with id 0 and observe 400 (Bad Request) + error message "bookingid out of range"
-  #Scenario: NF.007: (auth) Get a booking with id -1 and observe 400 (Bad Request) + error message "bookingid out of range"
-  #Scenario: NF.008: (auth) Get a booking with id abc and observe 400 (Bad Request) + error message "bookingid wrong data type: got string should be int32"
-  #Scenario: NF.009: (auth) Get a booking with id 1000000000 and observe 400 (Bad Request) + error message "bookingid out of range"
+
+  Scenario: NF.006: (auth) Get a booking with id 0 and observe 404 (Not Found)
+   Given I am authenticated
+      And I add a cookie to the header with key "token"
+     When I send a "GET" request to "/0"
+     Then the response should have a status code 404
+
+  Scenario: NF.007: (auth) Get a booking with id -1 and observe 404 (Not Found)
+   Given I am authenticated
+      And I add a cookie to the header with key "token"
+     When I send a "GET" request to "/-1"
+     Then the response should have a status code 404
+
+  Scenario: NF.008: (auth) Get a booking with id abc and observe 404 (Not Found)
+   Given I am authenticated
+      And I add a cookie to the header with key "token"
+     When I send a "GET" request to "/abc"
+     Then the response should have a status code 404
+
+  Scenario: NF.009: (auth) Get a booking with id 1000000000 and observe 404 (Bad Request)
+   Given I am authenticated
+      And I add a cookie to the header with key "token"
+     When I send a "GET" request to "/1000000000"
+     Then the response should have a status code 404
 
   # updateBooking operation
   #Scenario: NF.101: (auth) Update an existing booking with valid data and observe 200 (OK) + booking changed with new data

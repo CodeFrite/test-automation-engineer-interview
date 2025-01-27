@@ -1,0 +1,13 @@
+{
+  "bookingid": 123,
+  "roomid": 2,
+  "firstname": "r2d2",
+  "lastname": "r2d2",
+  "depositpaid": true,
+  "email": "r2d2@hotmail.com",
+  "phone": "0033258369147",
+  "bookingdates": {
+    "checkin": "2025-02-05",
+    "checkout": "2025-02-06"
+  }
+}

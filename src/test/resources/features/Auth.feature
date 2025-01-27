@@ -13,7 +13,7 @@ Feature: User Authentication
 
   # Positive Test Case
 
-  Scenario: Authenticate the user with valid credentials
+  Scenario: S.001: Authenticate the user with valid credentials
     Given I use the credentials "admin" / "password"
      When I send a "POST" request
      Then the response should have a status code 200
@@ -21,18 +21,18 @@ Feature: User Authentication
    
   # Negative Test Cases
   
-  Scenario: Authenticate the user with invalid credentials
+  Scenario: S.002: Authenticate the user with invalid credentials
     Given I use the credentials "bad" / "credentials"
      When I send a "POST" request
      Then I should get a response with status code 403
 
-  Scenario: Authenticate the user with valid credentials and incorrect method
+  Scenario: S.003: Authenticate the user with valid credentials and incorrect method
     Given I use the credentials "admin" / "password"
      When I send a "GET" request
      Then the response should have a status code 405
       And the response should have a json body with key value "error" / "Method Not Allowed"
 
-  Scenario: Authenticate the user without credentials
+  Scenario: S.004: Authenticate the user without credentials
      When I send a "POST" request
      Then the response should have a status code 415
       And the response should have a json body with key value "error" / "Unsupported Media Type"

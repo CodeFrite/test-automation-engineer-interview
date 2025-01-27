@@ -872,34 +872,53 @@ I am making use of POJO classes to map the request and response bodies to send a
 ```java
 package online.automationintesting.pojo;
 
-public class Credentials {
-    private String username;
-    private String password;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    // Constructor
-    public Credentials(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
+public class Booking {
+  @JsonProperty("bookingid")
+  private Integer bookingId;
 
-    // Getters and setters
-    public String getUsername() {
-        return username;
-    }
+  @JsonProperty("roomid")
+  private Integer roomId;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+  @JsonProperty("firstname")
+  private String firstName;
 
-    public String getPassword() {
-        return password;
-    }
+  // ... some more fields
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+  // Default constructor is required for Jackson to be able to deserialize JSON to a Booking object
+  public Booking() {}
+
+  // Constructor with all fields
+  public Booking (Integer bookingId, Integer roomId, String firstName, String lastName, Boolean depositPaid, String email, String phone, BookingDates bookingDates) {
+    this.bookingId = bookingId;
+    this.roomId = roomId;
+    this.firstName = firstName;
+    // ... some more assignments
+  }
+
+  // Getters & Setters
+  public Integer getBookingId() {
+    return bookingId;
+  }
+
+  public void setBookingId(Integer bookingId) {
+    this.bookingId = bookingId;
+  }
+
+  public Integer getRoomId() {
+    return roomId;
+  }
+
+  public void setRoomId(Integer roomId) {
+    this.roomId = roomId;
+  }
+  // ... some more getters & setters
 }
+
 ```
+
+As we can see, we are using the `@JsonProperty` annotation to map the fields of the POJO class to the JSON keys as they are different in the class and the API request & response. We also have a default constructor that is required for Jackson to be able to deserialize JSON to a Booking object.
 
 ### 4.5 Step Definitions
 

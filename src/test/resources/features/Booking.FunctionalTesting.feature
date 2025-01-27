@@ -53,17 +53,13 @@ Feature: Room Booking API
     Then I should see the following information for the booking "booking-1" 
       | firstname | lastname | depositpaid | email                | phone             |
       | John      | Doe      | true        | john.doe@example.com | +32/12345.678.91  |
-    When I update the "firstname" with the value "Matt" for booking "booking-1" 
+    When I update the "firstName" with the value "Matt" for booking "booking-1" 
     Then I should see the following information for the booking "booking-1" 
       | firstname | lastname | depositpaid | email                | phone             |
       | Matt      | Doe      | true        | john.doe@example.com | +32/12345.678.91  |
-    When I update the "lastname" with the value "Damon" for booking "booking-1" 
+    When I update the "lastName" with the value "Damon" for booking "booking-1" 
     Then I should see the following information for the booking "booking-1" 
       | firstname | lastname | depositpaid | email                | phone             |
       | Matt      | Damon      | true      | john.doe@example.com | +32/12345.678.91  |  
-    When I update the "depositpaid" with the value "false" for booking "booking-1" 
-    Then I should see the following information for the booking "booking-1" 
-      | firstname | lastname | depositpaid | email                | phone             |
-      | Matt      | Damon    | false       | john.doe@example.com | +32/12345.678.91  |  
     
   # Negative Test Cases

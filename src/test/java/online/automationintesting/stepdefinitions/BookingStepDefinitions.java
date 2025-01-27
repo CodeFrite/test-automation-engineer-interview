@@ -16,6 +16,7 @@ import io.restassured.specification.RequestSpecification;
 import online.automationintesting.pojo.Booking;
 import online.automationintesting.pojo.BookingDates;
 import online.automationintesting.pojo.Bookings;
+import online.automationintesting.utils.Helper;
 import online.automationintesting.utils.TestContext;
 
 public class BookingStepDefinitions {
@@ -74,8 +75,44 @@ public class BookingStepDefinitions {
     .jsonPath()
     .getObject("booking", Booking.class);
 
+    // since email and phone are not returned in the response, we need to set them manually
+    newBooking.setEmail(booking.getEmail());
+    newBooking.setPhone(booking.getPhone());
+
     // store the new booking information into the test context store
-    this.testContext.storeValue(bookingStoreId, newBooking);
+    this.testContext.storeValue(bookingStoreId,newBooking);
+  }
+
+  @When("I update the {string} with the value {string} for booking {string}")
+  public void i_update_the_with_the_value_for_booking(String keyToUpdate, String newValue, String bookingStoreId) throws Exception{
+      // Retrieve the booking information from the test context store
+      Booking storedBooking = (Booking) this.testContext.getValue(bookingStoreId);
+
+      // Update the booking information with the new value
+      Helper.setField(storedBooking, keyToUpdate, newValue);
+
+      // convert the Booking object to a JSON string
+      ObjectMapper objectMapper = new ObjectMapper();
+      String jsonBody = objectMapper.writeValueAsString(storedBooking);
+
+      // Instantiate a new RequestSpecBuilder object to not pollute the Test Context
+      RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
+
+      // add all necessary headers, the auth token and the JSON body to the RequestSpecBuilder object
+      RequestSpecification requestSpecification = requestSpecBuilder
+      .addHeader("Cache-Control", "no-cache")
+      .addHeader("Host", "automationintesting.online")
+      .setBaseUri("https://automationintesting.online/booking/" + storedBooking.getBookingId())
+      .addCookie("token", this.testContext.getValue("token").toString())
+      .addHeader("Content-Type", "application/json")
+      .setBody(jsonBody)
+      .build();
+
+      // call the updateBooking endpoint to update the booking
+      Response response = given().log().all().spec(requestSpecification).when().log().all().put();
+
+      // check status code
+      response.then().statusCode(200);
   }
 
   @When("I cancel the booking {string}")
@@ -95,10 +132,10 @@ public class BookingStepDefinitions {
     .build();
 
     // call the getBooking endpoint to retrieve the newly created booking
-    Response response = given().spec(requestSpecification).log().all().when().log().all().delete();
+    Response response = given().spec(requestSpecification).when().delete();
 
     // check status code
-    response.then().log().all().statusCode(202);
+    response.then().statusCode(202);
   }
 
   @Then("I should be able to find information about the booking {string}")
@@ -118,10 +155,10 @@ public class BookingStepDefinitions {
     .build();
 
     // call the getBooking endpoint to retrieve the newly created booking
-    Response response = given().spec(requestSpecification).log().all().when().log().all().get();
+    Response response = given().spec(requestSpecification).when().get();
 
     // check status code
-    ValidatableResponse validatableResponse = response.then().log().all().statusCode(200);
+    ValidatableResponse validatableResponse = response.then().statusCode(200);
 
     // get the newly created booking information from the response body
     Booking retrievedBooking = validatableResponse
@@ -150,10 +187,10 @@ public class BookingStepDefinitions {
     .build();
 
     // call the getBooking endpoint to retrieve the newly created booking
-    Response response = given().spec(requestSpecification).log().all().when().log().all().get();
+    Response response = given().spec(requestSpecification).when().get();
 
     // check status code
-    ValidatableResponse validatableResponse = response.then().log().all().statusCode(200);
+    ValidatableResponse validatableResponse = response.then().statusCode(200);
 
     // get the newly created booking information from the response body
     Booking retrievedBooking = validatableResponse
@@ -176,7 +213,6 @@ public class BookingStepDefinitions {
   public void i_should_be_able_to_find_in_the_summary_the_booking(String bookingStoreId) {
     // Retrieve a stored booking information from the test context store
     Booking booking = (Booking) this.testContext.getValue(bookingStoreId);
-    System.out.println(">>> ROOM ID :" + booking.getRoomId());
 
     // Instantiate a new RequestSpecBuilder object to not pollute the Test Context
     RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
@@ -191,24 +227,17 @@ public class BookingStepDefinitions {
     .build();
 
     // call the getBooking endpoint to retrieve the newly created booking
-    Response response = given().log().all().spec(requestSpecification).when().log().all().get();
+    Response response = given().spec(requestSpecification).when().get();
 
     // check status code
-    ValidatableResponse validatableResponse = response.then().log().all().statusCode(200);
+    ValidatableResponse validatableResponse = response.then().statusCode(200);
 
     // get the summary information for the room where the booking was made
     Bookings bookings = validatableResponse.extract().as(Bookings.class);
 
-    for (Bookings.BookingItem bookingItem : bookings.getBookings()) {
-        BookingDates bookingDates = bookingItem.getBookingDates();
-        System.out.println("Checkin: " + bookingDates.getCheckin());
-        System.out.println("Checkout: " + bookingDates.getCheckout());
-    }
-
     // check that the retrieved summary information contains the booking dates from our booking
     Assert.assertTrue(bookings.containsBookingDates(booking.getBookingDates()));
   }
-
 
   @Then("I should not be able to find in the summary the booking {string}")
   public void i_should_not_be_able_to_find_in_the_summary_the_booking(String bookingStoreId) {
@@ -229,10 +258,10 @@ public class BookingStepDefinitions {
     .build();
 
     // call the getBooking endpoint to retrieve the newly created booking
-    Response response = given().log().all().spec(requestSpecification).when().log().all().get();
+    Response response = given().spec(requestSpecification).when().get();
 
     // check status code
-    ValidatableResponse validatableResponse = response.then().log().all().statusCode(200);
+    ValidatableResponse validatableResponse = response.then().statusCode(200);
 
     // get the summary information for the room where the booking was made
     Bookings bookings = validatableResponse.extract().as(Bookings.class);
